@@ -8,7 +8,7 @@ services:
       - DD_AGENT_HOST=datadog-agent
       - DD_SERVICE=app
       - DD_ENV=${ENVIRONMENT}
-      - DATABASE_URL=postgresql://user:password@localhost:5432/student_management
+      - DATABASE_URL=postgresql://user:password@db:5432/student_management
     networks:
       - datadog-agent-monitoring
       - app-network
@@ -19,8 +19,7 @@ services:
     env_file:
       - .env.development
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     profiles:
       - default
 
@@ -28,14 +27,13 @@ services:
     build: .
     command: pytest tests/
     environment:
-      - DATABASE_URL=postgresql://user:password@localhost:5432/student_management
+      - DATABASE_URL=postgresql://user:password@db:5432/student_management
     networks:
       - app-network
     volumes:
       - .:/app
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     profiles:
       - test
 
@@ -52,12 +50,6 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    command: postgres -c 'listen_addresses=*'
 
 networks:
   datadog-agent-monitoring:
