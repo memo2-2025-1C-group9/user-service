@@ -25,7 +25,8 @@ services:
 
   test:
     build: .
-    command: sleep infinity  # Comando que mantiene el contenedor corriendo
+    entrypoint: ["/bin/sh", "-c"]
+    command: "while true; do sleep 1; done"
     environment:
       - DATABASE_URL=postgresql://user:password@db:5432/student_management
     networks:
