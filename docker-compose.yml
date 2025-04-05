@@ -8,7 +8,7 @@ services:
       - DD_AGENT_HOST=datadog-agent
       - DD_SERVICE=app
       - DD_ENV=${ENVIRONMENT}
-      - DATABASE_URL=postgresql://user:password@db:5432/student_management
+      - DATABASE_URL=postgresql://user:password@localhost:5432/student_management
     networks:
       - datadog-agent-monitoring
       - app-network
