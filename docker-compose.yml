@@ -24,18 +24,24 @@ services:
       - default
 
   test:
-    build: .
-    command: pytest tests/
-    environment:
-      - DATABASE_URL=postgresql://user:password@db:5432/student_management
-    networks:
-      - app-network
-    volumes:
-      - .:/app
-    depends_on:
-      - db
+    build:
+      context: .
     profiles:
       - test
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - DB_NAME=mydb
+    command: >
+      sh -c "PYTHONPATH=. pytest --cov=app --cov=tests --cov-report=term-missing --cov-report=xml:/coverage/coverage.xml"
+    
+    volumes:
+      - ./coverage:/coverage
+
 
   db:
     image: postgres:15
