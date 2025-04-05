@@ -42,9 +42,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y docker-compose
+    
+      - name: Copy environment variables
+        run: cp .env.example .env.development
 
       - name: Start Docker DB service
-        run: docker-compose up -d db
+        run: docker-compose up -d
 
       - name: Wait for DB to be ready
         run: |
