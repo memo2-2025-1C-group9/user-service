@@ -65,6 +65,8 @@ jobs:
             echo "Waiting for database..."
             sleep 5
           done
+          # Esperar un poco más para asegurarnos de que todo esté listo
+          sleep 10
 
       - name: Run tests
         run: |

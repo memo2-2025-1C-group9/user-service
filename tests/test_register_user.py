@@ -9,7 +9,9 @@ from app.main import app, Base
 from app.routers.user_router import get_db
 
 # Usar la URL de la base de datos de la variable de entorno si está disponible, o localhost como fallback
-TEST_DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5432/test_student_management")
+TEST_DATABASE_URL = os.getenv(
+    "DATABASE_URL", "postgresql://user:password@localhost:5432/test_student_management"
+)
 engine = create_engine(TEST_DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
