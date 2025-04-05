@@ -7,7 +7,7 @@ from sqlalchemy.sql import text
 from app.main import app, Base
 from app.routers.user_router import get_db
 
-TEST_DATABASE_URL = "postgresql://user:password@db:5432/test_student_management"
+TEST_DATABASE_URL = "postgresql://user:password@localhost:5432/test_student_management"
 engine = create_engine(TEST_DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -17,9 +17,8 @@ def create_test_database():
         with engine.connect() as connection:
             connection.execute(text("SELECT 1"))
     except OperationalError:
-        root_engine = create_engine("postgresql://user:password@db:5432/postgres")
+        root_engine = create_engine("postgresql://user:password@localhost:5432/postgres")
         with root_engine.connect() as connection:
-
             connection.execution_options(isolation_level="AUTOCOMMIT").execute(
                 text("CREATE DATABASE test_student_management")
             )
