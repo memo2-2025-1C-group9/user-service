@@ -32,7 +32,7 @@ jobs:
         run: black --check app tests
 
 
-  start-docker-db:
+  start-docker:
     runs-on: ubuntu-latest
     needs: lint
     steps:
@@ -66,10 +66,25 @@ jobs:
             sleep 5
           done
           sleep 10
-          
+
+      - name: Start Docker DB service
+        run: docker-compose --profile test up -d
+
+      - name: Wait for Docker to be ready
+        run: |
+          for i in {1..10}; do
+            if docker exec student_management_db pg_isready -U user; then
+              echo "Database is ready"
+              break
+            fi
+            echo "Waiting for database..."
+            sleep 5
+          done
+          sleep 10
+
   test:
     runs-on: ubuntu-latest
-    needs: start-docker-db
+    needs: start-docker
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
