@@ -7,15 +7,38 @@ services:
       - DD_AGENT_HOST=datadog-agent
       - DD_SERVICE=app
       - DD_ENV=${ENVIRONMENT}
+      - DATABASE_URL=postgresql://user:password@db:5432/student_management
     networks:
       - datadog-agent-monitoring
+      - app-network
     ports:
-      - "8080:8080"
+      - "8000:8000"
     volumes:
       - .:/app
     env_file:
       - .env.development
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    container_name: student_management_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: student_management
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
 
 networks:
   datadog-agent-monitoring:
     external: true
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
