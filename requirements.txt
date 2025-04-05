@@ -8,3 +8,4 @@ pytest-asyncio
 sqlalchemy
 psycopg2-binary
 pydantic[email]
+pydantic-settings
