@@ -31,7 +31,7 @@ jobs:
       - name: Run black
         run: black --check app tests
 
-  start-docker:
+  start-docker-db:
     runs-on: ubuntu-latest
     needs: lint
     steps:
@@ -43,26 +43,23 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y docker-compose
 
-      - name: Copy environment variables
-        run: cp .env.example .env.development
+      - name: Start Docker DB service
+        run: docker-compose up -d db
 
-      - name: Start Docker services
-        run: docker-compose up -d
-
-      - name: Wait for API to be ready
+      - name: Wait for DB to be ready
         run: |
           for i in {1..10}; do
-            if curl -s http://localhost:8080/health; then
-              echo "API is ready"
+            if docker exec student_management_db pg_isready -U user; then
+              echo "Database is ready"
               break
             fi
-            echo "Waiting for API..."
+            echo "Waiting for database..."
             sleep 5
           done
 
   test:
     runs-on: ubuntu-latest
-    needs: start-docker
+    needs: start-docker-db
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -99,10 +96,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y docker-compose
-
-      - name: Recreate .env.development file
-        run: |
-          cp .env.example .env.development
 
       - name: Stop Docker services
         run: docker-compose down
