@@ -45,6 +45,9 @@ jobs:
       - name: Start Docker services
         run: docker-compose --profile test up --build -d
 
+      - name: Override DB_HOST for GitHub Actions
+        run: sed -i 's/DB_HOST=db/DB_HOST=127.0.0.1/' .env.development
+
       - name: Wait for DB to be ready
         run: |
           for i in {1..10}; do
