@@ -19,29 +19,25 @@ services:
     env_file:
       - .env.development
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     profiles:
       - default
 
   test:
-    build:
-      context: .
+    build: .
+    command: pytest tests/
+    environment:
+      - DATABASE_URL=postgresql://user:password@localhost:5432/student_management
+    networks:
+      - app-network
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
     profiles:
       - test
-    depends_on:
-      - db
-    environment:
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_USER=user
-      - DB_PASSWORD=password
-      - DB_NAME=mydb
-    command: >
-      sh -c "PYTHONPATH=. pytest --cov=app --cov=tests --cov-report=term-missing --cov-report=xml:/coverage/coverage.xml"
-    
-    volumes:
-      - ./coverage:/coverage
-
 
   db:
     image: postgres:15
@@ -56,6 +52,11 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 networks:
   datadog-agent-monitoring:
