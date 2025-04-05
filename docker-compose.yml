@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    environment:
+      - DD_AGENT_HOST=datadog-agent
+      - DD_SERVICE=app
+      - DD_ENV=${ENVIRONMENT}
+    networks:
+      - datadog-agent-monitoring
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+    env_file:
+      - .env.development
+
+networks:
+  datadog-agent-monitoring:
+    external: true
