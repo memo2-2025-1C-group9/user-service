@@ -52,8 +52,8 @@ jobs:
       - name: Copy environment variables
         run: cp .env.example .env.development
 
-      - name: Start Docker DB service
-        run: docker-compose up -d
+      - name: Start Docker services
+        run: docker-compose --profile test up --build -d
 
       - name: Wait for DB to be ready
         run: |
@@ -65,22 +65,7 @@ jobs:
             echo "Waiting for database..."
             sleep 5
           done
-          sleep 10
 
-      - name: Start Docker DB service
-        run: docker-compose --profile test up -d
-
-      - name: Wait for Docker to be ready
-        run: |
-          for i in {1..10}; do
-            if docker exec student_management_db pg_isready -U user; then
-              echo "Database is ready"
-              break
-            fi
-            echo "Waiting for database..."
-            sleep 5
-          done
-          sleep 10
 
   test:
     runs-on: ubuntu-latest
