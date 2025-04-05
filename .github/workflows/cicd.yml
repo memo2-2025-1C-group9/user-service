@@ -65,12 +65,22 @@ jobs:
             echo "Waiting for database..."
             sleep 5
           done
+          # Esperar un poco más para asegurarnos de que todo esté listo
           sleep 10
+
+      - name: Check test container status
+        run: |
+          docker ps -a
+          echo "Test container logs:"
+          docker logs $(docker-compose --profile test ps -q test)
 
       - name: Run tests
         run: |
+          # Asegurarnos de que el contenedor de test esté corriendo
           docker-compose --profile test up -d test
+          # Esperar a que el contenedor esté listo
           sleep 5
+          # Ejecutar los tests
           docker-compose --profile test exec test pytest tests/ --cov=app --cov=tests --cov-report=term-missing --cov-report=xml
 
       - name: Copy coverage report
