@@ -17,7 +17,9 @@ def create_test_database():
         with engine.connect() as connection:
             connection.execute(text("SELECT 1"))
     except OperationalError:
-        root_engine = create_engine("postgresql://user:password@localhost:5432/postgres")
+        root_engine = create_engine(
+            "postgresql://user:password@localhost:5432/postgres"
+        )
         with root_engine.connect() as connection:
             connection.execution_options(isolation_level="AUTOCOMMIT").execute(
                 text("CREATE DATABASE test_student_management")
