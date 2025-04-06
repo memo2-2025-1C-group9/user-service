@@ -49,6 +49,10 @@ jobs:
           pip install -r requirements.txt
           pip install pytest pytest-cov
 
+      - name: Set up environment
+        run: |
+          echo "PYTHONPATH=$PYTHONPATH:$(pwd)" >> $GITHUB_ENV
+
       - name: Run tests
         run: |
           pytest tests/ -v --cov=app --cov=tests --cov-report=term-missing --cov-report=xml
