@@ -1,6 +1,6 @@
 # ClassConnect Template Service
 
-![Coverage](https://img.shields.io/badge/Coverage-100%25-brightgreen)
+![Coverage](https://img.shields.io/badge/Coverage-94.44%25-brightgreen)
 
 
 [![CI/CD Pipeline](https://github.com/memo2-2025-1C-group9/template-service/actions/workflows/cicd.yml/badge.svg)](https://github.com/memo2-2025-1C-group9/student-management/actions/workflows/cicd.yml)
