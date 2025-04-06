@@ -1,21 +1,62 @@
 version: '3.8'
 
 services:
-  app:
+  test:
     build: .
+    command: pytest tests/ -v --cov=app --cov=tests --cov-report=term-missing --capture=no
     environment:
-      - DD_AGENT_HOST=datadog-agent
-      - DD_SERVICE=app
-      - DD_ENV=${ENVIRONMENT}
+      - ENVIRONMENT=test
+      - DATABASE_URL=postgresql://user:password@db:5432/student_management
     networks:
-      - datadog-agent-monitoring
-    ports:
-      - "8080:8080"
+      - app-network
     volumes:
       - .:/app
-    env_file:
-      - .env.development
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles:
+      - test
+
+  db:
+    image: postgres:15
+    container_name: student_management_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: student_management
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d student_management"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    command: /entrypoint.sh app
+    environment:
+      - ENVIRONMENT=development
+      - DATABASE_URL=postgresql://user:password@db:5432/student_management
+    ports:
+      - "8000:8000"
+    networks:
+      - app-network
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles:
+      - app
 
 networks:
   datadog-agent-monitoring:
     external: true
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

@@ -3,21 +3,16 @@
 # Establecer PYTHONPATH para que pytest encuentre el módulo app
 export PYTHONPATH=/app
 
-# Iniciar la aplicación FastAPI
-uvicorn app.main:app --host $HOST --port $PORT &
-
-UVICORN_PID=$!
-
-# Ejecutar las pruebas de pytest automaticamente al levantar el container
-# Sigo corriendo FastAPI independientemente del resultado de las pruebas
-# Dasabilito capture para que permita el logging de pytest
-pytest tests -q --continue-on-collection-errors --capture=no
-
-# Mostrar un mensaje que indique si las pruebas son exitosas o si hay algunas fallidas
-if [ $? -eq 0 ]; then
-    echo "Las pruebas pasaron exitosamente."
-else
-    echo "Algunas pruebas fallaron. Verifica los resultados."
+# Si estamos en modo test, ejecutamos los tests
+if [ "$1" = "test" ]; then
+    export TESTING=1
+    # Ejecutar los tests con coverage y sin captura de salida
+    pytest tests -v --continue-on-collection-errors --capture=no
+    exit $?
 fi
 
-wait $UVICORN_PID
+# Si no estamos en modo test, iniciamos la aplicación FastAPI
+if [ "$1" = "app" ]; then
+    export TESTING=0
+    gunicorn app.main:app --worker-class uvicorn.workers.UvicornWorker --bind $HOST:$PORT
+fi

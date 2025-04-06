@@ -1,8 +1,9 @@
 from fastapi import FastAPI
+from app.routers.user_router import router as user_router
+from app.db.base import Base
+from app.db.session import engine
 
 app = FastAPI()
 
-
-@app.get("/health")
-def get_health():
-    return {"status": "ok"}
+Base.metadata.create_all(bind=engine)
+app.include_router(user_router, prefix="/api/v1")

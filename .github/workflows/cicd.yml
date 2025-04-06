@@ -31,38 +31,23 @@ jobs:
       - name: Run black
         run: black --check app tests
 
-  start-docker:
-    runs-on: ubuntu-latest
-    needs: lint
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Docker Compose
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
-
-      - name: Copy environment variables
-        run: cp .env.example .env.development
-
-      - name: Start Docker services
-        run: docker-compose up -d
-
-      - name: Wait for API to be ready
-        run: |
-          for i in {1..10}; do
-            if curl -s http://localhost:8080/health; then
-              echo "API is ready"
-              break
-            fi
-            echo "Waiting for API..."
-            sleep 5
-          done
-
   test:
     runs-on: ubuntu-latest
-    needs: start-docker
+    needs: lint
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: student_management
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -78,9 +63,25 @@ jobs:
           pip install -r requirements.txt
           pip install pytest pytest-cov
 
-      - name: Run tests with coverage
+      - name: Set up environment
         run: |
-          PYTHONPATH=. pytest --cov=app --cov=tests --cov-report=term-missing --cov-report=xml
+          echo "PYTHONPATH=$PYTHONPATH:$(pwd)" >> $GITHUB_ENV
+          echo "DATABASE_URL=postgresql://user:password@localhost:5432/student_management" >> $GITHUB_ENV
+
+      - name: Wait for PostgreSQL
+        run: |
+          for i in {1..10}; do
+            if pg_isready -h localhost -p 5432 -U user -d student_management; then
+              echo "Database is ready"
+              break
+            fi
+            echo "Waiting for database..."
+            sleep 5
+          done
+
+      - name: Run tests
+        run: |
+          pytest tests/ -v --cov=app --cov=tests --cov-report=term-missing --cov-report=xml
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
@@ -88,28 +89,9 @@ jobs:
           name: coverage-report
           path: coverage.xml
 
-  stop-docker:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Docker Compose
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
-
-      - name: Recreate .env.development file
-        run: |
-          cp .env.example .env.development
-
-      - name: Stop Docker services
-        run: docker-compose down
-
   update-readme:
     runs-on: ubuntu-latest
-    needs: stop-docker
+    needs: test
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -125,15 +107,21 @@ jobs:
           COVERAGE=$(grep -oP 'line-rate="\K[0-9.]+' coverage.xml | awk '{print $1*100}' | head -n1 | tr -d '\n')
           echo "COVERAGE=$COVERAGE" >> $GITHUB_ENV
 
-      - name: Generate badge URL
+      - name: Generate badges
         run: |
-          BADGE_URL="https://img.shields.io/badge/Coverage-${COVERAGE}%25-brightgreen"
-          echo "Generated Badge URL: $BADGE_URL"
-          echo "BADGE_URL=$BADGE_URL" >> $GITHUB_ENV
+          # Generar badge de coverage
+          COVERAGE_BADGE="https://img.shields.io/badge/Coverage-${COVERAGE}%25-brightgreen"
+          echo "COVERAGE_BADGE=$COVERAGE_BADGE" >> $GITHUB_ENV
+          
+          # Generar badge de estado del pipeline
+          PIPELINE_BADGE="https://img.shields.io/badge/Pipeline-passing-brightgreen"
+          echo "PIPELINE_BADGE=$PIPELINE_BADGE" >> $GITHUB_ENV
 
-      - name: Update README with badge
+      - name: Update README with badges
         run: |
-          sed -i "s|!\[Coverage\](.*)|![Coverage](${BADGE_URL})|" README.md
+          # Actualizar badges en el README
+          sed -i "s|!\[Coverage\](.*)|![Coverage](${COVERAGE_BADGE})|" README.md
+          sed -i "s|!\[Pipeline\](.*)|![Pipeline](${PIPELINE_BADGE})|" README.md
 
       - name: Commit and push changes
         env:
@@ -146,5 +134,5 @@ jobs:
           git checkout $TARGET_BRANCH
           git pull origin $TARGET_BRANCH
           git add README.md
-          git commit -m "Update coverage badge in README" || echo "No changes to commit"
+          git commit -m "Update badges in README" || echo "No changes to commit"
           git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} HEAD:$TARGET_BRANCH
