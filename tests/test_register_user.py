@@ -1,5 +1,6 @@
 import pytest
 import os
+import logging
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -8,9 +9,13 @@ from sqlalchemy.sql import text
 from app.main import app, Base
 from app.routers.user_router import get_db
 
-# Usar la URL de la base de datos de la variable de entorno si está disponible, o localhost como fallback
+# Configurar logging para suprimir mensajes de FastAPI
+logging.getLogger("uvicorn").setLevel(logging.WARNING)
+logging.getLogger("fastapi").setLevel(logging.WARNING)
+
+# Usar la URL de la base de datos de la variable de entorno si está disponible, o db como fallback
 TEST_DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql://user:password@localhost:5432/test_student_management"
+    "DATABASE_URL", "postgresql://user:password@db:5432/student_management"
 )
 engine = create_engine(TEST_DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -22,11 +27,11 @@ def create_test_database():
             connection.execute(text("SELECT 1"))
     except OperationalError:
         # Usar la misma URL base pero con la base de datos postgres
-        root_url = TEST_DATABASE_URL.replace("/test_student_management", "/postgres")
+        root_url = TEST_DATABASE_URL.replace("/student_management", "/postgres")
         root_engine = create_engine(root_url)
         with root_engine.connect() as connection:
             connection.execution_options(isolation_level="AUTOCOMMIT").execute(
-                text("CREATE DATABASE test_student_management")
+                text("CREATE DATABASE student_management")
             )
 
 
@@ -45,7 +50,10 @@ def override_get_db():
 
 app.dependency_overrides[get_db] = override_get_db
 
-client = TestClient(app)
+
+@pytest.fixture
+def client():
+    return TestClient(app, base_url="http://testserver")
 
 
 @pytest.fixture(scope="function")
@@ -56,7 +64,7 @@ def setup_test_db():
     Base.metadata.drop_all(bind=engine)
 
 
-def test_register_user(setup_test_db):
+def test_register_user(client, setup_test_db):
     # Registrar un usuario correctamente
     response = client.post(
         "/api/v1/register",
@@ -70,7 +78,7 @@ def test_register_user(setup_test_db):
     assert response.json()["status"] == "success"
 
 
-def test_register_duplicate_user(setup_test_db):
+def test_register_duplicate_user(client, setup_test_db):
     client.post(
         "/api/v1/register",
         json={
@@ -93,7 +101,7 @@ def test_register_duplicate_user(setup_test_db):
     assert response.json()["detail"] == "El correo electrónico ya está registrado."
 
 
-def test_register_user_short_password(setup_test_db):
+def test_register_user_short_password(client, setup_test_db):
     # Intentar registrar un usuario con contraseña corta
     response = client.post(
         "/api/v1/register",
@@ -106,7 +114,7 @@ def test_register_user_short_password(setup_test_db):
     )
 
 
-def test_register_user_non_alphanumeric_password(setup_test_db):
+def test_register_user_non_alphanumeric_password(client, setup_test_db):
     # Intentar registrar un usuario con contraseña no alfanumérica
     response = client.post(
         "/api/v1/register",
@@ -119,7 +127,7 @@ def test_register_user_non_alphanumeric_password(setup_test_db):
     )
 
 
-def test_register_user_missing_fields(setup_test_db):
+def test_register_user_missing_fields(client, setup_test_db):
     # Intentar registrar un usuario con campos faltantes
     response = client.post(
         "/api/v1/register", json={"name": "John Doe", "email": "john@example.com"}
@@ -129,7 +137,7 @@ def test_register_user_missing_fields(setup_test_db):
     assert response.json()["detail"][0]["loc"] == ["body", "password"]
 
 
-def test_register_user_invalid_email(setup_test_db):
+def test_register_user_invalid_email(client, setup_test_db):
     # Intentar registrar un usuario con un correo electrónico inválido
     response = client.post(
         "/api/v1/register",
@@ -143,7 +151,7 @@ def test_register_user_invalid_email(setup_test_db):
     assert response.json()["detail"][0]["loc"] == ["body", "email"]
 
 
-def test_register_user_name_with_special_characters(setup_test_db):
+def test_register_user_name_with_special_characters(client, setup_test_db):
     # Intentar registrar un usuario con un nombre que contiene caracteres especiales
     response = client.post(
         "/api/v1/register",

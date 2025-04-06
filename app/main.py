@@ -6,5 +6,4 @@ from app.db.session import engine
 app = FastAPI()
 
 Base.metadata.create_all(bind=engine)
-
 app.include_router(user_router, prefix="/api/v1")

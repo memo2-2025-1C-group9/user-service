@@ -9,3 +9,5 @@ sqlalchemy
 psycopg2-binary
 pydantic[email]
 pydantic-settings
+coverage
+pytest-cov
