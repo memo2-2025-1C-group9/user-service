@@ -54,8 +54,7 @@ jobs:
 
       - name: Copy environment variables
         run: |
-          cd services/user-auth
-          cp .env.example .env.development
+          cp services/user-auth/.env.example services/user-auth/.env.development
 
       - name: Start Docker services
         run: |
@@ -118,8 +117,7 @@ jobs:
 
       - name: Recreate .env.development file
         run: |
-          cd services/user-auth
-          cp .env.example .env.development
+          cp services/user-auth/.env.example services/user-auth/.env.development
 
       - name: Stop Docker services
         run: |
