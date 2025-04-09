@@ -8,6 +8,7 @@ app = FastAPI()
 Base.metadata.create_all(bind=engine)
 app.include_router(user_router, prefix="/api/v1")
 
+
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
