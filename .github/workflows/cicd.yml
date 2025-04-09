@@ -59,7 +59,7 @@ jobs:
       - name: Start Docker services
         run: |
           cd services/user-auth
-          docker-compose up -d
+          docker-compose --env-file .env.development up -d
 
       - name: Wait for API to be ready
         run: |
@@ -122,7 +122,7 @@ jobs:
       - name: Stop Docker services
         run: |
           cd services/user-auth
-          docker-compose down
+          docker-compose --env-file .env.development down
 
   deploy-coverage:
     runs-on: ubuntu-latest
