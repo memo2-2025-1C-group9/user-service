@@ -1,22 +1,34 @@
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, field_validator, ConfigDict
 import re
 
 
-class UserCreate(BaseModel):
+class UserBase(BaseModel):
     name: str
     email: EmailStr
+    location: str | None = None
+
+    @field_validator('name')
+    @classmethod
+    def validate_name(cls, v):
+        if not re.match(r'^[a-zA-Z\s]+$', v):
+            raise ValueError('El nombre no puede contener caracteres especiales.')
+        return v
+
+
+class UserCreate(UserBase):
     password: str
 
-    @field_validator("password")
-    def validate_password(cls, password):
-        if len(password) < 6:
-            raise ValueError("La contraseña debe tener al menos 6 caracteres.")
-        if not password.isalnum():
-            raise ValueError("La contraseña debe ser alfanumérica.")
-        return password
+    @field_validator('password')
+    @classmethod
+    def validate_password(cls, v):
+        if len(v) < 6:
+            raise ValueError('La contraseña debe tener al menos 6 caracteres.')
+        if not v.isalnum():
+            raise ValueError('La contraseña debe ser alfanumérica.')
+        return v
 
-    @field_validator("name")
-    def validate_name(cls, name):
-        if not re.match("^[a-zA-Z0-9 ]+$", name):
-            raise ValueError("El nombre no puede contener caracteres especiales.")
-        return name
+
+class User(UserBase):
+    id: int
+
+    model_config = ConfigDict(from_attributes=True)
