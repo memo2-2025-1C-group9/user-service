@@ -58,7 +58,7 @@ jobs:
 
       - name: Start Docker services
         run: |
-          docker-compose -f $GITHUB_WORKSPACE/services/user-auth/app/docker-compose.yml --env-file $GITHUB_WORKSPACE/services/user-auth/.env.development up -d
+          docker-compose -f $GITHUB_WORKSPACE/services/user-auth/docker-compose.yml --env-file $GITHUB_WORKSPACE/services/user-auth/.env.development up -d
 
       - name: Wait for API to be ready
         run: |
@@ -116,11 +116,11 @@ jobs:
 
       - name: Recreate .env.development file
         run: |
-          cp $GITHUB_WORKSPACE/services/user-auth/app/.env.example $GITHUB_WORKSPACE/services/user-auth/app/.env.development
+          cp $GITHUB_WORKSPACE/services/user-auth/.env.example $GITHUB_WORKSPACE/services/user-auth/.env.development
 
       - name: Stop Docker services
         run: |
-          docker-compose -f $GITHUB_WORKSPACE/services/user-auth/app/docker-compose.yml --env-file $GITHUB_WORKSPACE/services/user-auth/app/.env.development down
+          docker-compose -f $GITHUB_WORKSPACE/services/user-auth/docker-compose.yml --env-file $GITHUB_WORKSPACE/services/user-auth/.env.development down
 
   deploy-coverage:
     runs-on: ubuntu-latest
