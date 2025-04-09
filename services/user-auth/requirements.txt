@@ -11,3 +11,4 @@ pydantic[email]
 pydantic-settings
 coverage
 pytest-cov
+gunicorn

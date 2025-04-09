@@ -1,16 +1,14 @@
-version: '3.8'
-
 services:
-  test:
-    build: .
-    command: pytest tests/ -v --cov=app --cov=tests --cov-report=term-missing --capture=no
+  user-auth-test:
+    build: ./services/user-auth/
+    command: /entrypoint.sh test
     environment:
       - ENVIRONMENT=test
       - DATABASE_URL=postgresql://user:password@db:5432/student_management
     networks:
       - app-network
     volumes:
-      - .:/app
+      - ./services/user-auth:/app
     depends_on:
       db:
         condition: service_healthy
@@ -36,21 +34,27 @@ services:
       timeout: 5s
       retries: 5
 
-  app:
-    build: .
+  user-auth:
+    build: ./services/user-auth/
     command: /entrypoint.sh app
     environment:
       - ENVIRONMENT=development
       - DATABASE_URL=postgresql://user:password@db:5432/student_management
+      - DD_AGENT_HOST=datadog-agent
+      - DD_SERVICE=app
+      - DD_ENV=${ENVIRONMENT}
     ports:
       - "8000:8000"
     networks:
       - app-network
+      - datadog-agent-monitoring
     depends_on:
       db:
         condition: service_healthy
     profiles:
       - app
+    env_file:
+      - .env.development
 
 networks:
   datadog-agent-monitoring:
