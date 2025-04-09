@@ -15,14 +15,14 @@ def create_user(db: Session, user_data: UserCreate):
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El email ya está registrado"
+            detail="El email ya está registrado",
         )
-    
+
     new_user = User(
         name=user_data.name,
         email=user_data.email,
         password=user_data.password,
-        location=user_data.location
+        location=user_data.location,
     )
     db.add(new_user)
     db.commit()

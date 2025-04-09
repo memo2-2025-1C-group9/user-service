@@ -9,6 +9,4 @@ def register_user(db: Session, user: UserCreate):
         return create_user(db, user)
     except Exception:
         db.rollback()
-        raise HTTPException(
-            status_code=400, detail="El email ya está registrado"
-        )
+        raise HTTPException(status_code=400, detail="El email ya está registrado")

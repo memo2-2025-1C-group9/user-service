@@ -73,7 +73,7 @@ def test_register_user(client, setup_test_db):
             "name": "John Doe",
             "email": "john@example.com",
             "password": "password123",
-            "location": "Buenos Aires"
+            "location": "Buenos Aires",
         },
     )
     assert response.status_code == 200
@@ -90,7 +90,7 @@ def test_register_duplicate_user(client, setup_test_db):
             "name": "John Doe",
             "email": "john@example.com",
             "password": "password123",
-            "location": "Buenos Aires"
+            "location": "Buenos Aires",
         },
     )
 
@@ -101,7 +101,7 @@ def test_register_duplicate_user(client, setup_test_db):
             "name": "John Doe",
             "email": "john@example.com",
             "password": "password123",
-            "location": "Buenos Aires"
+            "location": "Buenos Aires",
         },
     )
     assert response.status_code == 400
@@ -115,7 +115,7 @@ def test_register_user_without_location(client, setup_test_db):
         json={
             "name": "John Doe",
             "email": "john@example.com",
-            "password": "password123"
+            "password": "password123",
         },
     )
     assert response.status_code == 200
@@ -131,7 +131,7 @@ def test_register_user_invalid_email(client, setup_test_db):
             "name": "John Doe",
             "email": "invalid-email",
             "password": "password123",
-            "location": "Buenos Aires"
+            "location": "Buenos Aires",
         },
     )
     assert response.status_code == 422
@@ -142,10 +142,7 @@ def test_register_user_missing_required_fields(client, setup_test_db):
     # Intentar registrar un usuario sin campos requeridos
     response = client.post(
         "/api/v1/register",
-        json={
-            "email": "john@example.com",
-            "password": "password123"
-        },
+        json={"email": "john@example.com", "password": "password123"},
     )
     assert response.status_code == 422
     assert "Field required" in response.json()["detail"][0]["msg"]
