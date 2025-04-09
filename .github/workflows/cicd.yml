@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - register-back
   pull_request:
     branches:
       - main
