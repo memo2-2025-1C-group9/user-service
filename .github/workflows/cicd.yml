@@ -58,7 +58,7 @@ jobs:
 
       - name: Start Docker services
         run: |
-          docker-compose -f $GITHUB_WORKSPACE/services/user-auth/docker-compose.yml --env-file $GITHUB_WORKSPACE/services/user-auth/.env.development up -d
+          docker-compose -up -d
 
       - name: Wait for API to be ready
         run: |
