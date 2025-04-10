@@ -91,7 +91,7 @@ jobs:
 
       - name: Run tests with coverage
         env:
-          DATABASE_URL: postgresql://user:password@db:5432/student_management
+          DATABASE_URL: postgresql://user:password@localhost:5432/student_management
         run: |
           cd services/user-auth
           PYTHONPATH=. pytest --cov=app --cov=tests --cov-report=term-missing --cov-report=xml --cov-report=html
