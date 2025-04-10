@@ -60,7 +60,6 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE/services/user-auth
           docker-compose --profile app up -d
-          docker-compose logs -f &
 
       - name: Wait for API to be ready
         run: |
@@ -71,7 +70,6 @@ jobs:
               exit 0
             fi
             echo "Waiting for API... Attempt $i/30"
-            docker-compose logs user-auth
             sleep 5
           done
           echo "API failed to start"
@@ -99,6 +97,8 @@ jobs:
           pip install pytest pytest-cov
 
       - name: Run tests with coverage
+        env:
+          DATABASE_URL: postgresql://user:password@localhost:5432/student_management
         run: |
           cd services/user-auth
           PYTHONPATH=. pytest --cov=app --cov=tests --cov-report=term-missing --cov-report=xml --cov-report=html
