@@ -6,9 +6,7 @@ from app.schemas.user import UserCreate
 
 def register_user(db: Session, user: UserCreate):
     try:
-        return create_user(db, name=user.name, email=user.email)
+        return create_user(db, user)
     except Exception:
         db.rollback()
-        raise HTTPException(
-            status_code=400, detail="El correo electrónico ya está registrado."
-        )
+        raise HTTPException(status_code=400, detail="El email ya está registrado")

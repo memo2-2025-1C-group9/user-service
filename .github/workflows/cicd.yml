@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - register-back
   pull_request:
     branches:
       - main
@@ -36,12 +37,17 @@ jobs:
           cd services/user-auth
           black --check app tests
 
-  start-docker:
+  test:
     runs-on: ubuntu-latest
     needs: lint
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
 
       - name: Install Docker Compose
         run: |
@@ -53,36 +59,28 @@ jobs:
 
       - name: Copy environment variables
         run: |
-          cd services/user-auth
-          cp .env.example .env.development
+          cp $GITHUB_WORKSPACE/services/user-auth/.env.example $GITHUB_WORKSPACE/services/user-auth/.env.development
 
       - name: Start Docker services
         run: |
-          cd services/user-auth
-          docker-compose up -d
+          cd $GITHUB_WORKSPACE/services/user-auth
+          docker-compose --profile app up -d
 
       - name: Wait for API to be ready
         run: |
-          for i in {1..10}; do
-            if curl -s http://localhost:8080/health; then
+          cd $GITHUB_WORKSPACE/services/user-auth
+          for i in {1..30}; do
+            if curl -s http://localhost:8000/health; then
               echo "API is ready"
-              break
+              exit 0
             fi
-            echo "Waiting for API..."
+            echo "Waiting for API... Attempt $i/30"
             sleep 5
           done
-
-  test:
-    runs-on: ubuntu-latest
-    needs: start-docker
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
+          echo "API failed to start"
+          docker-compose ps
+          docker-compose logs
+          exit 1
 
       - name: Install dependencies
         run: |
@@ -92,9 +90,18 @@ jobs:
           pip install pytest pytest-cov
 
       - name: Run tests with coverage
+        env:
+          DATABASE_URL: postgresql://user:password@localhost:5432/student_management
         run: |
           cd services/user-auth
           PYTHONPATH=. pytest --cov=app --cov=tests --cov-report=term-missing --cov-report=xml --cov-report=html
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: services/user-auth/htmlcov/
+          retention-days: 1
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
@@ -103,26 +110,9 @@ jobs:
           fail_ci_if_error: true
           verbose: true
 
-  stop-docker:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Docker Compose
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
-
-      - name: Recreate .env.development file
-        run: |
-          cd services/user-auth
-          cp .env.example .env.development
-
       - name: Stop Docker services
         run: |
-          cd services/user-auth
+          cd $GITHUB_WORKSPACE/services/user-auth
           docker-compose down
 
   deploy-coverage:
@@ -132,22 +122,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Download coverage report
+        uses: actions/download-artifact@v4
         with:
-          python-version: '3.10'
-
-      - name: Install dependencies
-        run: |
-          cd services/user-auth
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest pytest-cov
-
-      - name: Generate coverage report
-        run: |
-          cd services/user-auth
-          PYTHONPATH=. pytest --cov=app --cov=tests --cov-report=html
+          name: coverage-report
+          path: services/user-auth/htmlcov
 
       - name: Checkout GitHub Pages
         uses: actions/checkout@v4

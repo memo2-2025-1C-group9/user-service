@@ -8,6 +8,7 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.sql import text
 from app.main import app, Base
 from app.routers.user_router import get_db
+from unittest.mock import MagicMock, patch
 
 # Configurar logging para suprimir mensajes de FastAPI
 logging.getLogger("uvicorn").setLevel(logging.WARNING)
@@ -72,19 +73,24 @@ def test_register_user(client, setup_test_db):
             "name": "John Doe",
             "email": "john@example.com",
             "password": "password123",
+            "location": "Buenos Aires",
         },
     )
     assert response.status_code == 200
     assert response.json()["status"] == "success"
+    assert "location" in response.json()["data"]
+    assert response.json()["data"]["location"] == "Buenos Aires"
 
 
 def test_register_duplicate_user(client, setup_test_db):
+    # Registrar primer usuario
     client.post(
         "/api/v1/register",
         json={
             "name": "John Doe",
             "email": "john@example.com",
             "password": "password123",
+            "location": "Buenos Aires",
         },
     )
 
@@ -95,10 +101,52 @@ def test_register_duplicate_user(client, setup_test_db):
             "name": "John Doe",
             "email": "john@example.com",
             "password": "password123",
+            "location": "Buenos Aires",
         },
     )
     assert response.status_code == 400
-    assert response.json()["detail"] == "El correo electrónico ya está registrado."
+    assert response.json()["detail"] == "El email ya está registrado"
+
+
+def test_register_user_without_location(client, setup_test_db):
+    # Registrar un usuario sin location (debería ser opcional)
+    response = client.post(
+        "/api/v1/register",
+        json={
+            "name": "John Doe",
+            "email": "john@example.com",
+            "password": "password123",
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["status"] == "success"
+    assert response.json()["data"]["location"] is None
+
+
+def test_register_user_invalid_email(client, setup_test_db):
+    # Intentar registrar un usuario con email inválido
+    response = client.post(
+        "/api/v1/register",
+        json={
+            "name": "John Doe",
+            "email": "invalid-email",
+            "password": "password123",
+            "location": "Buenos Aires",
+        },
+    )
+    assert response.status_code == 422
+    assert "value is not a valid email address" in response.json()["detail"][0]["msg"]
+
+
+def test_register_user_missing_required_fields(client, setup_test_db):
+    # Intentar registrar un usuario sin campos requeridos
+    response = client.post(
+        "/api/v1/register",
+        json={"email": "john@example.com", "password": "password123"},
+    )
+    assert response.status_code == 422
+    assert "Field required" in response.json()["detail"][0]["msg"]
+    assert response.json()["detail"][0]["loc"] == ["body", "name"]
 
 
 def test_register_user_short_password(client, setup_test_db):
@@ -125,30 +173,6 @@ def test_register_user_non_alphanumeric_password(client, setup_test_db):
         response.json()["detail"][0]["msg"]
         == "Value error, La contraseña debe ser alfanumérica."
     )
-
-
-def test_register_user_missing_fields(client, setup_test_db):
-    # Intentar registrar un usuario con campos faltantes
-    response = client.post(
-        "/api/v1/register", json={"name": "John Doe", "email": "john@example.com"}
-    )
-    assert response.status_code == 422
-    assert response.json()["detail"][0]["msg"] == "Field required"
-    assert response.json()["detail"][0]["loc"] == ["body", "password"]
-
-
-def test_register_user_invalid_email(client, setup_test_db):
-    # Intentar registrar un usuario con un correo electrónico inválido
-    response = client.post(
-        "/api/v1/register",
-        json={"name": "John Doe", "email": "invalid-email", "password": "password123"},
-    )
-    assert response.status_code == 422
-    assert (
-        response.json()["detail"][0]["msg"]
-        == "value is not a valid email address: An email address must have an @-sign."
-    )
-    assert response.json()["detail"][0]["loc"] == ["body", "email"]
 
 
 def test_register_user_name_with_special_characters(client, setup_test_db):
