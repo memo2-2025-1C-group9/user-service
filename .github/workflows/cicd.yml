@@ -101,18 +101,6 @@ jobs:
           pip install -r requirements.txt
           pip install pytest pytest-cov
 
-      - name: Wait for database to be ready
-        run: |
-          cd $GITHUB_WORKSPACE/services/user-auth
-          for i in {1..30}; do
-            if docker-compose exec db pg_isready -U user -d student_management; then
-              echo "Database is ready"
-              break
-            fi
-            echo "Waiting for database... Attempt $i/30"
-            sleep 5
-          done
-
       - name: Run tests with coverage
         env:
           DATABASE_URL: postgresql://user:password@db:5432/student_management
@@ -120,16 +108,10 @@ jobs:
           cd services/user-auth
           PYTHONPATH=. pytest --cov=app --cov=tests --cov-report=term-missing --cov-report=xml --cov-report=html
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: true
-          verbose: true
-
   stop-docker:
     runs-on: ubuntu-latest
     needs: test
+    if: always()
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -139,13 +121,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y docker-compose
 
-      - name: Recreate .env.development file
-        run: |
-          cp $GITHUB_WORKSPACE/services/user-auth/.env.example $GITHUB_WORKSPACE/services/user-auth/.env.development
-
       - name: Stop Docker services
         run: |
-          docker-compose -f $GITHUB_WORKSPACE/services/user-auth/docker-compose.yml --env-file $GITHUB_WORKSPACE/services/user-auth/.env.development down
+          cd $GITHUB_WORKSPACE/services/user-auth
+          docker-compose down
 
   deploy-coverage:
     runs-on: ubuntu-latest
