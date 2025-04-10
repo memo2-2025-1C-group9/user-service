@@ -115,23 +115,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-
-      - name: Install dependencies
-        run: |
-          cd services/user-auth
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest pytest-cov
-
-      - name: Generate coverage report
-        run: |
-          cd services/user-auth
-          PYTHONPATH=. pytest --cov=app --cov=tests --cov-report=html
-
       - name: Checkout GitHub Pages
         uses: actions/checkout@v4
         with:
