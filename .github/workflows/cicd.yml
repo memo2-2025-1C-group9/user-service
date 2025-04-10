@@ -58,18 +58,23 @@ jobs:
 
       - name: Start Docker services
         run: |
-          docker-compose up -d
+          docker-compose -f $GITHUB_WORKSPACE/services/user-auth/docker-compose.yml --env-file $GITHUB_WORKSPACE/services/user-auth/.env.development up -d
+          docker-compose -f $GITHUB_WORKSPACE/services/user-auth/docker-compose.yml logs -f &
 
       - name: Wait for API to be ready
         run: |
-          for i in {1..10}; do
+          for i in {1..30}; do
             if curl -s http://localhost:8000/health; then
               echo "API is ready"
-              break
+              exit 0
             fi
-            echo "Waiting for API..."
-            sleep 10
+            echo "Waiting for API... Attempt $i/30"
+            sleep 5
           done
+          echo "API failed to start"
+          docker-compose -f $GITHUB_WORKSPACE/services/user-auth/docker-compose.yml ps
+          docker-compose -f $GITHUB_WORKSPACE/services/user-auth/docker-compose.yml logs
+          exit 1
 
   test:
     runs-on: ubuntu-latest
