@@ -37,12 +37,17 @@ jobs:
           cd services/user-auth
           black --check app tests
 
-  start-docker:
+  test:
     runs-on: ubuntu-latest
     needs: lint
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
 
       - name: Install Docker Compose
         run: |
@@ -77,23 +82,6 @@ jobs:
           docker-compose logs
           exit 1
 
-  test:
-    runs-on: ubuntu-latest
-    needs: start-docker
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-
-      - name: Install Docker Compose
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
-
       - name: Install dependencies
         run: |
           cd services/user-auth
@@ -108,18 +96,12 @@ jobs:
           cd services/user-auth
           PYTHONPATH=. pytest --cov=app --cov=tests --cov-report=term-missing --cov-report=xml --cov-report=html
 
-  stop-docker:
-    runs-on: ubuntu-latest
-    needs: test
-    if: always()
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Docker Compose
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          verbose: true
 
       - name: Stop Docker services
         run: |
