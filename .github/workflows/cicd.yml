@@ -96,9 +96,21 @@ jobs:
           pip install -r requirements.txt
           pip install pytest pytest-cov
 
+      - name: Wait for database to be ready
+        run: |
+          cd $GITHUB_WORKSPACE/services/user-auth
+          for i in {1..30}; do
+            if docker-compose exec db pg_isready -U user -d student_management; then
+              echo "Database is ready"
+              break
+            fi
+            echo "Waiting for database... Attempt $i/30"
+            sleep 5
+          done
+
       - name: Run tests with coverage
         env:
-          DATABASE_URL: postgresql://user:password@localhost:5432/student_management
+          DATABASE_URL: postgresql://user:password@db:5432/student_management
         run: |
           cd services/user-auth
           PYTHONPATH=. pytest --cov=app --cov=tests --cov-report=term-missing --cov-report=xml --cov-report=html
