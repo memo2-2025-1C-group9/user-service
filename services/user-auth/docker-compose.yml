@@ -14,6 +14,8 @@ services:
         condition: service_healthy
     profiles:
       - test
+    env_file:
+      - .env.development
 
   db:
     image: postgres:15
