@@ -50,6 +50,7 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
             status_code=500, detail=f"Error interno del servidor: {str(e)}"
         )
 
+
 @router.post("/token")
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
@@ -58,18 +59,17 @@ async def login_for_access_token(
     try:
         credentials = UserLogin(email=form_data.username, password=form_data.password)
         return handle_login_user(db, credentials)
-    
+
     except ValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid input email or password",
-            )
-    
+        )
+
     except HTTPException as e:
         raise e
-    
+
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Error interno del servidor: {str(e)}"
         )
-    

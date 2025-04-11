@@ -1,5 +1,6 @@
 from fastapi.responses import JSONResponse
 
+
 def problem_detail_response(
     status_code: int,
     title: str,
@@ -16,5 +17,5 @@ def problem_detail_response(
             "detail": detail,
             "instance": instance,
         },
-        media_type="application/problem+json"
+        media_type="application/problem+json",
     )

@@ -63,6 +63,7 @@ def setup_test_db():
     yield
     Base.metadata.drop_all(bind=engine)
 
+
 def expect_error_response(response, status_code: int):
     assert response.status_code == status_code
     data = response.json()
@@ -72,11 +73,15 @@ def expect_error_response(response, status_code: int):
     assert "detail" in data
     assert "instance" in data
 
-def register_user(client, name="John Doe", email="john@example.com", password="password123"):
+
+def register_user(
+    client, name="John Doe", email="john@example.com", password="password123"
+):
     return client.post(
         "/api/v1/register",
         json={"name": name, "email": email, "password": password},
     )
+
 
 def login_user(client, email="john@example.com", password="password123"):
     return client.post(
@@ -84,6 +89,7 @@ def login_user(client, email="john@example.com", password="password123"):
         data={"username": email, "password": password},
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
+
 
 def test_login_success_with_valid_email_and_password(client, setup_test_db):
     # Login exitoso con credenciales validas
@@ -96,8 +102,9 @@ def test_login_success_with_valid_email_and_password(client, setup_test_db):
     assert "access_token" in data
     assert data["token_type"] == "bearer"
 
+
 def test_login_fail_with_wrong_password(client, setup_test_db):
-    # Contrasena incorrecta    
+    # Contrasena incorrecta
 
     register_user(client)
 
@@ -105,14 +112,16 @@ def test_login_fail_with_wrong_password(client, setup_test_db):
 
     expect_error_response(response, 401)
 
-def test_login_fail_with_invalid_email_format(client, setup_test_db): 
+
+def test_login_fail_with_invalid_email_format(client, setup_test_db):
     # Formato de email invalido
 
     response = login_user(client, email="invalidemail")
 
     expect_error_response(response, 400)
 
-def test_login_fail_with_empty_password(client, setup_test_db): 
+
+def test_login_fail_with_empty_password(client, setup_test_db):
     # Contraseña vacia
     register_user(client)
 
@@ -120,12 +129,14 @@ def test_login_fail_with_empty_password(client, setup_test_db):
 
     expect_error_response(response, 400)
 
-def test_login_fail_with_empty_email(client, setup_test_db): 
+
+def test_login_fail_with_empty_email(client, setup_test_db):
     # Email vacío
 
     response = login_user(client, email="")
 
     expect_error_response(response, 400)
+
 
 def test_login_fail_with_nonexistent_user(client, setup_test_db):
     # Usuario no registrado
@@ -133,7 +144,9 @@ def test_login_fail_with_nonexistent_user(client, setup_test_db):
 
     expect_error_response(response, 401)
 
-#TODO: def test_sesion_expirada(client, setup_test_db):
+
+# TODO: def test_sesion_expirada(client, setup_test_db):
+
 
 def test_login_fail_with_blocked_user(client, setup_test_db):
     # Intento de login con usuario bloqueado
@@ -145,6 +158,7 @@ def test_login_fail_with_blocked_user(client, setup_test_db):
 
     expect_error_response(response, 401)
 
+
 def test_account_locks_after_failed_attempts(client, setup_test_db):
     # Se bloquea la cuenta luego de varios intentos fallidos
     register_user(client)
@@ -153,6 +167,6 @@ def test_account_locks_after_failed_attempts(client, setup_test_db):
         response = login_user(client, password="wrongpassword")
         expect_error_response(response, 401)
     # Luego, intenta iniciar sesión nuevamente
-    response = login_user(client) # Credenciales validas
+    response = login_user(client)  # Credenciales validas
 
     expect_error_response(response, 401)

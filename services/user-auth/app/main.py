@@ -9,6 +9,7 @@ app = FastAPI()
 Base.metadata.create_all(bind=engine)
 app.include_router(user_router, prefix="/api/v1")
 
+
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     return problem_detail_response(
