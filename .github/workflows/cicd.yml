@@ -59,8 +59,9 @@ jobs:
 
       - name: Copy environment variables
         run: |
-          cp $GITHUB_WORKSPACE/services/user-auth/.env.example $GITHUB_WORKSPACE/services/user-auth/.env.development
-          echo "ENVIRONMENT=test" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
+          echo "ENVIRONMENT=test" > $GITHUB_WORKSPACE/services/user-auth/.env.development
+          echo "HOST=0.0.0.0" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
+          echo "PORT=8000" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
 
       - name: Start Docker services
         env:
