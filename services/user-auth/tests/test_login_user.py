@@ -7,6 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.sql import text
+from sqlalchemy import select
 from app.main import app, Base
 from app.core.config import settings
 from app.routers.user_router import get_db
@@ -41,7 +42,6 @@ def create_test_database():
 create_test_database()
 
 Base.metadata.create_all(bind=engine)
-
 
 def override_get_db():
     db = TestingSessionLocal()
@@ -189,12 +189,24 @@ def test_session_expired(client, setup_test_db):
 def test_login_fail_with_blocked_user(client, setup_test_db):
     # Intento de login con usuario bloqueado
     register_user(client)
-    # Luego, bloquea el usuario
-    # TODO: (esto debería hacerse en la base de datos o a través de un endpoint)? o moquear el user?
+
+    from app.models.user import User
+    db = TestingSessionLocal()
+    user = db.query(User).filter(User.email == "john@example.com").first()
+    db.close()
+
+    # Bloquear el usuario
+    user.is_blocked = True
+
+    db = TestingSessionLocal()
+    db.add(user)
+    db.commit()
+    db.close()
+
     # Luego, intenta iniciar sesión
     response = login_user(client)
 
-    expect_error_response(response, 401)
+    expect_error_response(response, 403)
 
 
 def test_account_locks_after_failed_attempts(client, setup_test_db):

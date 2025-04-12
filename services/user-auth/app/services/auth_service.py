@@ -11,7 +11,12 @@ def authenticate_user(db: Session, email: str, password: str):
     user = get_user_by_email(db, email)
     if not user:
         return False
-    # if not verify_password(password, user.hashed_password): # con hashed passw
+    if user.is_blocked:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User is blocked",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     if not user.password == password:
         return False
     return user
