@@ -12,5 +12,8 @@ class Settings(BaseSettings):
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
 
+    MAX_FAILED_LOGIN_ATTEMPTS: int
+    LOCK_TIME_LOGIN_WINDOW: int
+    LOCK_USER_TIME: int
 
 settings = Settings()

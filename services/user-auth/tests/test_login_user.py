@@ -213,10 +213,9 @@ def test_account_locks_after_failed_attempts(client, setup_test_db):
     # Se bloquea la cuenta luego de varios intentos fallidos
     register_user(client)
     # Intenta iniciar sesión con credenciales incorrectas varias veces
-    for _ in range(5):
+    for _ in range(4):
         response = login_user(client, password="wrongpassword")
         expect_error_response(response, 401)
-    # Luego, intenta iniciar sesión nuevamente
-    response = login_user(client)  # Credenciales validas
-
-    expect_error_response(response, 401)
+    # Luego, intenta iniciar sesión nuevamente, debería bloquearse
+    response = login_user(client, password="wrongpassword")
+    expect_error_response(response, 403)
