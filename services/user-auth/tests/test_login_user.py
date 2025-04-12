@@ -1,13 +1,16 @@
 import pytest
 import os
 import logging
+import jwt
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.sql import text
 from app.main import app, Base
+from app.core.config import settings
 from app.routers.user_router import get_db
+from datetime import datetime, timedelta
 
 # Configurar logging para suprimir mensajes de FastAPI
 logging.getLogger("uvicorn").setLevel(logging.WARNING)
@@ -145,7 +148,42 @@ def test_login_fail_with_nonexistent_user(client, setup_test_db):
     expect_error_response(response, 401)
 
 
-# TODO: def test_sesion_expirada(client, setup_test_db):
+def test_protected_route_with_valid_token(client, setup_test_db):
+    # Ruta protegida con token valido
+    register_user(client)
+    response = login_user(client)
+    data = response.json()
+    token = data["access_token"]
+
+    response = client.get(
+        "/api/v1/users/me/",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert "email" in data
+    assert "name" in data
+    assert "disabled" in data
+
+
+def generate_expired_token(email):
+    # Simula un token expirado
+    to_encode = {"sub": email}
+    expire = datetime.now() - timedelta(minutes=1)  # Tiempo = expirado
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+
+def test_session_expired(client, setup_test_db):
+    register_user(client)
+    token = generate_expired_token(email="john@example.com")
+
+    response = client.get(
+        "/api/v1/users/me/",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    expect_error_response(response, 401)
 
 
 def test_login_fail_with_blocked_user(client, setup_test_db):
