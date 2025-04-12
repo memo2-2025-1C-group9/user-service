@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - register-back
+      - register-back2
   pull_request:
     branches:
       - main
