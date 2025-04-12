@@ -48,6 +48,20 @@ class UserLogin(BaseModel):
         return v
 
 
+class CurrentUser(BaseModel):
+    email: EmailStr
+    name: str
+    disabled: bool | None = None  # Esto tengo que mantenerlo en la db?
+
+
+class UserInDB(CurrentUser):
+    password: str
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+
+class TokenData(BaseModel):
+    email: str | None = None
