@@ -11,6 +11,9 @@ COPY . /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Create directory for SSL certificates
+RUN mkdir -p /etc/ssl/certs
+
 # Copy script entrypoint into the container
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
@@ -18,11 +21,9 @@ RUN chmod +x /entrypoint.sh
 # Expose the port that FastAPI will run on
 EXPOSE $PORT
 
-# Command to run the FastAPI app with Uvicorn
-# CMD ["sh", "-c", "uvicorn app.main:app --host $HOST --port $PORT"]
-
 # Establecer la variable de entorno PYTHONPATH para que pytest encuentre el módulo app
 ENV PYTHONPATH=/app
+ENV PGSSLMODE=require
 
 # Ejecutar el script de entrada cuando el contenedor se inicie
 ENTRYPOINT ["/entrypoint.sh"]
