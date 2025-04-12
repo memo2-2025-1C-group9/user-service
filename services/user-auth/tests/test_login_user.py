@@ -43,6 +43,7 @@ create_test_database()
 
 Base.metadata.create_all(bind=engine)
 
+
 def override_get_db():
     db = TestingSessionLocal()
     try:
@@ -191,6 +192,7 @@ def test_login_fail_with_blocked_user(client, setup_test_db):
     register_user(client)
 
     from app.models.user import User
+
     db = TestingSessionLocal()
     user = db.query(User).filter(User.email == "john@example.com").first()
     db.close()
