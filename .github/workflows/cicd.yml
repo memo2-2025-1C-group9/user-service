@@ -73,6 +73,7 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE/services/user-auth
           docker-compose --profile app up -d
+          docker-compose logs -f &
 
       - name: Wait for API to be ready
         run: |
@@ -83,11 +84,12 @@ jobs:
               exit 0
             fi
             echo "Waiting for API... Attempt $i/30"
+            docker-compose logs
             sleep 5
           done
           echo "API failed to start"
           docker-compose ps
-          docker-compose logs
+          docker-compose logs --tail=100
           exit 1
 
       - name: Install dependencies
