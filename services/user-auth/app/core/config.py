@@ -5,7 +5,7 @@ import os
 class Settings(BaseSettings):
     DATABASE_URL: str = os.getenv(
         "DATABASE_URL",
-        f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}?sslmode=require",
+        f"postgresql://test_db_e0tq_user:aARRiPFXHlp9D7sbRLds44lNgOSwGp2F@dpg-cvt6a649c44c73ccrhu0-a.oregon-postgres.render.com:5432/test_db_e0tq?sslmode=require"
     )
 
 
