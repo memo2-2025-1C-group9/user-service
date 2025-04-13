@@ -14,9 +14,10 @@ from unittest.mock import MagicMock, patch
 logging.getLogger("uvicorn").setLevel(logging.WARNING)
 logging.getLogger("fastapi").setLevel(logging.WARNING)
 
-# Usar la URL de la base de datos de la variable de entorno si está disponible, o db como fallback
+# Usar la URL de la base de datos desde las variables de entorno
 TEST_DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql://user:password@db:5432/student_management"
+    "DATABASE_URL",
+    f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}?sslmode=require",
 )
 engine = create_engine(TEST_DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -28,11 +29,11 @@ def create_test_database():
             connection.execute(text("SELECT 1"))
     except OperationalError:
         # Usar la misma URL base pero con la base de datos postgres
-        root_url = TEST_DATABASE_URL.replace("/student_management", "/postgres")
+        root_url = TEST_DATABASE_URL.replace(f"/{os.getenv('DB_NAME')}", "/postgres")
         root_engine = create_engine(root_url)
         with root_engine.connect() as connection:
             connection.execution_options(isolation_level="AUTOCOMMIT").execute(
-                text("CREATE DATABASE student_management")
+                text(f"CREATE DATABASE {os.getenv('DB_NAME')}")
             )
 
 
@@ -59,9 +60,11 @@ def client():
 
 @pytest.fixture(scope="function")
 def setup_test_db():
+    # Limpiar las tablas antes de cada test
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     yield
+    # Limpiar las tablas después de cada test
     Base.metadata.drop_all(bind=engine)
 
 

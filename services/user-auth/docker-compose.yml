@@ -4,55 +4,40 @@ services:
     command: /entrypoint.sh test
     environment:
       - ENVIRONMENT=test
-      - DATABASE_URL=postgresql://user:password@db:5432/student_management
-    networks:
-      - app-network
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=require
     volumes:
       - .:/app
-    depends_on:
-      db:
-        condition: service_healthy
+      - /tmp/render-ca.crt:/tmp/render-ca.crt
     profiles:
       - test
     env_file:
       - .env.development
-
-  db:
-    image: postgres:15
-    container_name: student_management_db
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: student_management
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - app-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d student_management"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
   user-auth:
     build: .
     command: /entrypoint.sh app
     environment:
       - ENVIRONMENT=development
-      - DATABASE_URL=postgresql://user:password@db:5432/student_management
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=require
       - DD_AGENT_HOST=datadog-agent
       - DD_SERVICE=app
       - DD_ENV=${ENVIRONMENT}
     ports:
       - "8000:8000"
+    volumes:
+      - /tmp/render-ca.crt:/tmp/render-ca.crt
     networks:
-      - app-network
       - datadog-agent-monitoring
-    depends_on:
-      db:
-        condition: service_healthy
     profiles:
       - app
     env_file:
@@ -61,8 +46,3 @@ services:
 networks:
   datadog-agent-monitoring:
     external: true
-  app-network:
-    driver: bridge
-
-volumes:
-  postgres_data:
