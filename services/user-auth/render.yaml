@@ -3,7 +3,6 @@ services:
     name: user-auth-service
     env: python
     pythonVersion: "3.10"
-    rootDir: services/user-auth
     buildCommand: |
       python -m pip install --upgrade pip
       pip install -r requirements.txt
