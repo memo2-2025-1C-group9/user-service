@@ -1,23 +1,21 @@
 services:
   - type: web
     name: user-auth-service
-    env: docker
-    dockerfilePath: ./Dockerfile
-    dockerCommand: docker build -t user-auth .
-    dockerContext: .
-    plan: free
-    region: oregon
+    env: python
+    pythonVersion: "3.10"
+    buildCommand: |
+      python -m pip install --upgrade pip
+      pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: ENVIRONMENT
         value: production
       - key: PGSSLMODE
         value: require
       - key: DATABASE_URL
-        fromDatabase:
-          name: user-auth-db
-          property: connectionString
-      - key: SECRET_KEY
         sync: false
+        value: postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      - key: SECRET_KEY
         generateValue: true
       - key: ALGORITHM
         value: HS256
@@ -33,50 +31,16 @@ services:
         value: DEBUG
       - key: PYTHONUNBUFFERED
         value: 1
-      - key: DB_USER
-        sync: false
-        fromService:
-          type: database
-          name: user-auth-db
-          property: user
-      - key: DB_PASSWORD
-        sync: false
-        fromService:
-          type: database
-          name: user-auth-db
-          property: password
-      - key: DB_HOST
-        sync: false
-        fromService:
-          type: database
-          name: user-auth-db
-          property: host
-      - key: DB_PORT
-        sync: false
-        fromService:
-          type: database
-          name: user-auth-db
-          property: port
-      - key: DB_NAME
-        sync: false
-        fromService:
-          type: database
-          name: user-auth-db
-          property: database
     healthCheckPath: /health
     autoDeploy: true
     numInstances: 1
     scaling:
       minInstances: 1
       maxInstances: 1
-    disk:
-      name: user-auth-disk
-      mountPath: /app/data
-      sizeGB: 1
 
 databases:
   - name: user-auth-db
-    databaseName: user_auth
-    user: user_auth
+    databaseName: db_ioio
+    user: admin
     plan: free
     region: oregon 
