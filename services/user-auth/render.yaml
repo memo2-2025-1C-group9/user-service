@@ -1,12 +1,12 @@
 services:
   - type: web
     name: user-auth-service
-    env: python
-    pythonVersion: "3.10"
-    buildCommand: |
-      python -m pip install --upgrade pip
-      pip install -r requirements.txt
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerCommand: docker build -t user-auth .
+    dockerContext: .
+    plan: free
+    region: oregon
     envVars:
       - key: ENVIRONMENT
         value: production
@@ -30,9 +30,15 @@ services:
         value: 30
     healthCheckPath: /health
     autoDeploy: true
+    numInstances: 1
+    disk:
+      name: user-auth-disk
+      mountPath: /app/data
+      sizeGB: 1
 
 databases:
   - name: user-auth-db
     databaseName: user_auth
     user: user_auth
-    plan: free 
+    plan: free
+    region: oregon 
