@@ -165,7 +165,6 @@ def test_protected_route_with_valid_token(client, setup_test_db):
     data = response.json()
     assert "email" in data
     assert "name" in data
-    assert "disabled" in data
 
 
 def generate_expired_token(email):

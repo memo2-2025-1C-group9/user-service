@@ -51,7 +51,6 @@ class UserLogin(BaseModel):
 class CurrentUser(BaseModel):
     email: EmailStr
     name: str
-    disabled: bool | None = None  # Esto tengo que mantenerlo en la db?
 
 
 class UserInDB(CurrentUser):
