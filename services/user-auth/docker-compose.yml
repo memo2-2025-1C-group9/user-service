@@ -15,6 +15,8 @@ services:
       - /tmp/render-ca.crt:/tmp/render-ca.crt
     profiles:
       - test
+    env_file:
+      - .env.development
 
   user-auth:
     build: .

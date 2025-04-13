@@ -12,3 +12,5 @@ pydantic-settings
 coverage
 pytest-cov
 gunicorn
+pyjwt
+python-multipart
