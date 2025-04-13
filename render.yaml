@@ -2,8 +2,11 @@ services:
   - type: web
     name: user-auth-service
     env: python
+    pythonVersion: "3.10"
     rootDir: services/user-auth
-    buildCommand: pip install -r requirements.txt
+    buildCommand: |
+      python -m pip install --upgrade pip
+      pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: ENVIRONMENT
@@ -26,6 +29,8 @@ services:
         value: 15
       - key: LOCK_USER_TIME
         value: 30
+    healthCheckPath: /health
+    autoDeploy: true
 
 databases:
   - name: user-auth-db
