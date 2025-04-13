@@ -31,6 +31,9 @@ services:
     healthCheckPath: /health
     autoDeploy: true
     numInstances: 1
+    scaling:
+      minInstances: 1
+      maxInstances: 1
     disk:
       name: user-auth-disk
       mountPath: /app/data
