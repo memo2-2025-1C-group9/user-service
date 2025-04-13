@@ -62,6 +62,14 @@ jobs:
           echo "HOST=0.0.0.0" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
           echo "PORT=8000" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
 
+          echo "SECRET_KEY=supersecret" > $GITHUB_WORKSPACE/services/user-auth/.env.development
+          echo "ALGORITHM=HS256" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
+          echo "ACCESS_TOKEN_EXPIRE_MINUTES=30" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
+
+          echo "MAX_FAILED_LOGIN_ATTEMPTS=5" > $GITHUB_WORKSPACE/services/user-auth/.env.development
+          echo "LOCK_TIME_LOGIN_WINDOW=15" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
+          echo "LOCK_USER_TIME=30" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
+
       - name: Start Docker services
         env:
           DB_USER: ${{ secrets.DB_USER }}
