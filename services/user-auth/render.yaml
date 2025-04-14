@@ -15,7 +15,9 @@ services:
       - key: PGSSLMODE
         value: "require"
       - key: DB_USER
-        value: "admin"
+        fromDatabase:
+          name: user-auth-db
+          property: user
       - key: DB_PASSWORD
         fromDatabase:
           name: user-auth-db
@@ -29,9 +31,9 @@ services:
           name: user-auth-db
           property: port
       - key: DB_NAME
-        value: "db_ioio"
-      - key: DATABASE_URL
-        value: "postgresql://admin:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/db_ioio?sslmode=require"
+        fromDatabase:
+          name: user-auth-db
+          property: database
       - key: SECRET_KEY
         generateValue: true
       - key: ALGORITHM
