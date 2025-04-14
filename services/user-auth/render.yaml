@@ -2,7 +2,7 @@ services:
   - type: web
     name: user-auth-service
     runtime: docker
-    dockerfilePath: ./Dockerfile
+    dockerfilePath: services/user-auth/Dockerfile
     plan: free
     region: oregon
     envVars:
