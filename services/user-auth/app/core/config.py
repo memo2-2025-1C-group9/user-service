@@ -10,22 +10,28 @@ class Settings(BaseSettings):
         case_sensitive=True
     )
 
-    ENVIRONMENT: str = "production"
-    HOST: str = "0.0.0.0"
-    PORT: int = 10000
+    ENVIRONMENT: str
+    HOST: str
+    PORT: int
 
-    DATABASE_URL: str = os.getenv(
-        "DATABASE_URL",
-        f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}?sslmode=require",
-    )
+    DB_USER: str
+    DB_PASSWORD: str
+    DB_HOST: str
+    DB_PORT: int
+    DB_NAME: str
+    PGSSLMODE: str = "require"
 
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "default-secret-key")
-    ALGORITHM: str = os.getenv("ALGORITHM", "HS256")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
+    @property
+    def DATABASE_URL(self) -> str:
+        return f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}?sslmode={self.PGSSLMODE}"
 
-    MAX_FAILED_LOGIN_ATTEMPTS: int = int(os.getenv("MAX_FAILED_LOGIN_ATTEMPTS", "5"))
-    LOCK_TIME_LOGIN_WINDOW: int = int(os.getenv("LOCK_TIME_LOGIN_WINDOW", "15"))
-    LOCK_USER_TIME: int = int(os.getenv("LOCK_USER_TIME", "30"))
+    SECRET_KEY: str
+    ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
+
+    MAX_FAILED_LOGIN_ATTEMPTS: int
+    LOCK_TIME_LOGIN_WINDOW: int
+    LOCK_USER_TIME: int
 
 
 settings = Settings()
