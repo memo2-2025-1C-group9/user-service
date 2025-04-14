@@ -8,6 +8,10 @@ services:
     envVars:
       - key: ENVIRONMENT
         value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 8000
       - key: PGSSLMODE
         value: require
       - key: DATABASE_URL
