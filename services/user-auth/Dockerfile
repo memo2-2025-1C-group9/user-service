@@ -20,4 +20,4 @@ ENV HOST=0.0.0.0
 ENV PORT=10000
 
 # Run the application
-CMD ["sh", "-c", "echo 'Variables de entorno:' && env && uvicorn app.main:app --host $HOST --port $PORT"]
+CMD ["sh", "-c", "echo 'Variables de entorno:' && env && echo 'DB_USER: $DB_USER' && echo 'DB_PASSWORD: $DB_PASSWORD' && echo 'DB_HOST: $DB_HOST' && echo 'DB_PORT: $DB_PORT' && echo 'DB_NAME: $DB_NAME' && uvicorn app.main:app --host $HOST --port $PORT"]
