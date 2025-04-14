@@ -3,9 +3,7 @@ services:
     name: user-auth-service
     env: docker
     dockerfilePath: ./Dockerfile
-    dockerCommand: |
-      docker-compose --profile app build
-      docker-compose --profile app up -d
+    dockerCommand: docker-compose --profile app up -d
     dockerContext: .
     plan: free
     region: oregon
