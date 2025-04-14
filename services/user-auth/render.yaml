@@ -7,31 +7,31 @@ services:
     region: oregon
     envVars:
       - key: ENVIRONMENT
-        value: production
+        value: "production"
       - key: HOST
-        value: 0.0.0.0
+        value: "0.0.0.0"
       - key: PORT
-        value: 8000
+        value: "8000"
       - key: PGSSLMODE
-        value: require
+        value: "require"
       - key: DATABASE_URL
-        value: postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+        value: "postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
       - key: SECRET_KEY
         generateValue: true
       - key: ALGORITHM
-        value: HS256
+        value: "HS256"
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
-        value: 30
+        value: "30"
       - key: MAX_FAILED_LOGIN_ATTEMPTS
-        value: 5
+        value: "5"
       - key: LOCK_TIME_LOGIN_WINDOW
-        value: 15
+        value: "15"
       - key: LOCK_USER_TIME
-        value: 30
+        value: "30"
       - key: LOG_LEVEL
-        value: DEBUG
+        value: "DEBUG"
       - key: PYTHONUNBUFFERED
-        value: 1
+        value: "1"
     healthCheckPath: /health
     autoDeploy: true
     numInstances: 1
