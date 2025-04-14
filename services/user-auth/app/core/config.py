@@ -22,8 +22,17 @@ class Settings(BaseSettings):
     ENVIRONMENT: str
     HOST: str
     PORT: int
-    DATABASE_URL: str
+
+    DB_USER: str
+    DB_PASSWORD: str
+    DB_HOST: str
+    DB_PORT: int
+    DB_NAME: str
     PGSSLMODE: str = "require"
+
+    @property
+    def DATABASE_URL(self) -> str:
+        return f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}?sslmode={self.PGSSLMODE}"
 
     SECRET_KEY: str
     ALGORITHM: str
@@ -38,6 +47,8 @@ try:
     settings = Settings()
     logger.debug("Configuración cargada exitosamente")
     logger.debug(f"HOST: {settings.HOST}")
+    logger.debug(f"DB_HOST: {settings.DB_HOST}")
+    logger.debug(f"DB_PORT: {settings.DB_PORT}")
     logger.debug(f"DATABASE_URL: {settings.DATABASE_URL}")
 except Exception as e:
     logger.error(f"Error al cargar la configuración: {str(e)}")
