@@ -15,8 +15,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN mkdir -p /etc/ssl/certs
 
 # Copy script entrypoint into the container
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY entrypoint.sh services/user-auth/entrypoint.sh
+RUN chmod +x services/user-auth/entrypoint.sh
 
 # Expose the port that FastAPI will run on
 EXPOSE $PORT
@@ -26,4 +26,4 @@ ENV PYTHONPATH=/app
 ENV PGSSLMODE=require
 
 # Ejecutar el script de entrada cuando el contenedor se inicie
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["services/user-auth/entrypoint.sh"]
