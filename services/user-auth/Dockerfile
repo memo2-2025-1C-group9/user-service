@@ -11,11 +11,11 @@ COPY . /app
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Expose the port that FastAPI will run on
-EXPOSE $PORT
+EXPOSE 10000
 
 # Set environment variables
 ENV PYTHONPATH=/app
 ENV PGSSLMODE=require
 
 # Run the application
-CMD uvicorn app.main:app --host 0.0.0.0 --port $PORT
+CMD uvicorn app.main:app --host 0.0.0.0 --port 10000
