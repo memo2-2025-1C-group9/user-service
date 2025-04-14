@@ -14,10 +14,22 @@ services:
         value: "10000"
       - key: PGSSLMODE
         value: "require"
-      - key: DATABASE_URL
+      - key: DB_USER
+        value: "admin"
+      - key: DB_PASSWORD
         fromDatabase:
           name: user-auth-db
-          property: connectionString
+          property: password
+      - key: DB_HOST
+        fromDatabase:
+          name: user-auth-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: user-auth-db
+          property: port
+      - key: DB_NAME
+        value: "db_ioio"
       - key: SECRET_KEY
         generateValue: true
       - key: ALGORITHM
