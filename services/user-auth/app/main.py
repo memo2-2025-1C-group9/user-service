@@ -22,4 +22,10 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy"}
+    try:
+        # Intentar conectar a la base de datos
+        with engine.connect() as connection:
+            connection.execute("SELECT 1")
+        return {"status": "healthy", "database": "connected"}
+    except Exception as e:
+        return {"status": "unhealthy", "error": str(e)}
