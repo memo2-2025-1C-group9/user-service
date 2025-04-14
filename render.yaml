@@ -13,7 +13,6 @@ services:
       - key: PGSSLMODE
         value: require
       - key: DATABASE_URL
-        sync: false
         value: postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
       - key: SECRET_KEY
         generateValue: true
@@ -34,9 +33,6 @@ services:
     healthCheckPath: /health
     autoDeploy: true
     numInstances: 1
-    scaling:
-      minInstances: 1
-      maxInstances: 1
 
 databases:
   - name: user-auth-db
