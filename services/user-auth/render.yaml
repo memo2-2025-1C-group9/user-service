@@ -30,6 +30,8 @@ services:
           property: port
       - key: DB_NAME
         value: "db_ioio"
+      - key: DATABASE_URL
+        value: "postgresql://admin:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/db_ioio?sslmode=require"
       - key: SECRET_KEY
         generateValue: true
       - key: ALGORITHM
