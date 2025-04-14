@@ -3,8 +3,7 @@ services:
     name: user-auth-service
     env: docker
     dockerfilePath: ./services/user-auth/Dockerfile
-    dockerCommand: docker-compose --profile app up -d
-    dockerContext: .
+    dockerCommand: docker build -t user-auth . && docker run -p $PORT:8000 user-auth
     plan: free
     region: oregon
     envVars:
