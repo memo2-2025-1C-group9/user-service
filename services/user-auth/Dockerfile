@@ -8,14 +8,14 @@ WORKDIR /app
 COPY . /app
 
 # Install dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY services/user-auth/requirements.txt .
+RUN pip install --no-cache-dir -r services/user-auth/requirements.txt
 
 # Create directory for SSL certificates
 RUN mkdir -p /etc/ssl/certs
 
 # Copy script entrypoint into the container
-COPY entrypoint.sh services/user-auth/entrypoint.sh
+COPY services/user-auth/entrypoint.sh services/user-auth/entrypoint.sh
 RUN chmod +x services/user-auth/entrypoint.sh
 
 # Expose the port that FastAPI will run on
