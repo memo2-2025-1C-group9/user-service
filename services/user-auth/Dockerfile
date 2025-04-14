@@ -8,7 +8,7 @@ WORKDIR /app
 COPY . /app
 
 # Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r services/user-auth/requirements.txt
 
 # Expose the port that FastAPI will run on
 EXPOSE $PORT
