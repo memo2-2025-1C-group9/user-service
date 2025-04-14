@@ -15,9 +15,7 @@ services:
       - key: PGSSLMODE
         value: "require"
       - key: DB_USER
-        fromDatabase:
-          name: user-auth-db
-          property: user
+        value: "admin"
       - key: DB_PASSWORD
         fromDatabase:
           name: user-auth-db
@@ -31,9 +29,7 @@ services:
           name: user-auth-db
           property: port
       - key: DB_NAME
-        fromDatabase:
-          name: user-auth-db
-          property: database
+        value: "db_ioio"
       - key: SECRET_KEY
         generateValue: true
       - key: ALGORITHM
