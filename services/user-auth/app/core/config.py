@@ -1,6 +1,15 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import os
+import logging
 
+# Configurar logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+# Mostrar todas las variables de entorno
+logger.debug("Variables de entorno disponibles:")
+for key, value in os.environ.items():
+    logger.debug(f"{key}: {value}")
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -34,4 +43,12 @@ class Settings(BaseSettings):
     LOCK_USER_TIME: int
 
 
-settings = Settings()
+try:
+    settings = Settings()
+    logger.debug("Configuración cargada exitosamente")
+    logger.debug(f"HOST: {settings.HOST}")
+    logger.debug(f"DB_HOST: {settings.DB_HOST}")
+    logger.debug(f"DB_PORT: {settings.DB_PORT}")
+except Exception as e:
+    logger.error(f"Error al cargar la configuración: {str(e)}")
+    raise

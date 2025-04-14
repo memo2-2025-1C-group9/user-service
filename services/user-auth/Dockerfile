@@ -16,6 +16,8 @@ EXPOSE 10000
 # Set environment variables
 ENV PYTHONPATH=/app
 ENV PGSSLMODE=require
+ENV HOST=0.0.0.0
+ENV PORT=10000
 
 # Run the application
-CMD uvicorn app.main:app --host 0.0.0.0 --port 10000
+CMD ["sh", "-c", "echo 'Variables de entorno:' && env && uvicorn app.main:app --host $HOST --port $PORT"]
