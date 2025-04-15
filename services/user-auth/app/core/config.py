@@ -11,12 +11,10 @@ logger.debug("Variables de entorno disponibles:")
 for key, value in os.environ.items():
     logger.debug(f"{key}: {value}")
 
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore",
-        case_sensitive=True
+        env_file=".env", env_file_encoding="utf-8", extra="ignore", case_sensitive=True
     )
 
     ENVIRONMENT: str
