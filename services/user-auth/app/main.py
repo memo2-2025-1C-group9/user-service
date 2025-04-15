@@ -3,6 +3,7 @@ from app.routers.user_router import router as user_router
 from app.db.base import Base
 from app.db.session import engine
 from app.utils.problem_details import problem_detail_response
+from sqlalchemy import text
 
 app = FastAPI()
 
@@ -22,4 +23,10 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy"}
+    try:
+        # Intentar conectar a la base de datos
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+        return {"status": "healthy", "database": "connected"}
+    except Exception as e:
+        return {"status": "unhealthy", "error": str(e)}

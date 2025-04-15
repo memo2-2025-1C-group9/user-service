@@ -1,16 +1,36 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 import os
+import logging
+
+# Configurar logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+# Mostrar todas las variables de entorno
+logger.debug("Variables de entorno disponibles:")
+for key, value in os.environ.items():
+    logger.debug(f"{key}: {value}")
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore", case_sensitive=True
+    )
+
     ENVIRONMENT: str
     HOST: str
     PORT: int
 
-    DATABASE_URL: str = os.getenv(
-        "DATABASE_URL",
-        f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}?sslmode=require",
-    )
+    DB_USER: str
+    DB_PASSWORD: str
+    DB_HOST: str
+    DB_PORT: int
+    DB_NAME: str
+    PGSSLMODE: str = "require"
+
+    @property
+    def DATABASE_URL(self) -> str:
+        return f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}?sslmode={self.PGSSLMODE}"
 
     SECRET_KEY: str
     ALGORITHM: str
@@ -21,4 +41,13 @@ class Settings(BaseSettings):
     LOCK_USER_TIME: int
 
 
-settings = Settings()
+try:
+    settings = Settings()
+    logger.debug("Configuración cargada exitosamente")
+    logger.debug(f"HOST: {settings.HOST}")
+    logger.debug(f"DB_HOST: {settings.DB_HOST}")
+    logger.debug(f"DB_PORT: {settings.DB_PORT}")
+    logger.debug(f"DATABASE_URL: {settings.DATABASE_URL}")
+except Exception as e:
+    logger.error(f"Error al cargar la configuración: {str(e)}")
+    raise

@@ -1,5 +1,5 @@
 # Use an official Python runtime as a parent image
-FROM python:3.13-slim
+FROM python:3.10-slim
 
 # Set the working directory
 WORKDIR /app
@@ -7,23 +7,20 @@ WORKDIR /app
 # Copy the current directory contents into the container
 COPY . /app
 
+# Make entrypoint.sh executable
+RUN chmod +x /app/entrypoint.sh
+
 # Install dependencies
-COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Create directory for SSL certificates
-RUN mkdir -p /etc/ssl/certs
-
-# Copy script entrypoint into the container
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
 # Expose the port that FastAPI will run on
-EXPOSE $PORT
+EXPOSE 10000
 
-# Establecer la variable de entorno PYTHONPATH para que pytest encuentre el módulo app
+# Set environment variables
 ENV PYTHONPATH=/app
 ENV PGSSLMODE=require
+ENV HOST=0.0.0.0
+ENV PORT=10000
 
-# Ejecutar el script de entrada cuando el contenedor se inicie
-ENTRYPOINT ["/entrypoint.sh"]
+# Run the application
+CMD ["/app/entrypoint.sh", "app"]
