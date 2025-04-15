@@ -23,4 +23,4 @@ ENV HOST=0.0.0.0
 ENV PORT=10000
 
 # Run the application
-ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["/app/entrypoint.sh", "app"]

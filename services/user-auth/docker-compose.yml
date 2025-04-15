@@ -1,7 +1,7 @@
 services:
   user-auth-test:
     build: .
-    command: /entrypoint.sh test
+    command: ["/app/entrypoint.sh", "test"]
     environment:
       - ENVIRONMENT=test
       - DB_USER=${DB_USER}
@@ -20,7 +20,7 @@ services:
 
   user-auth:
     build: .
-    command: /entrypoint.sh app
+    command: ["/app/entrypoint.sh", "app"]
     environment:
       - ENVIRONMENT=development
       - DB_USER=${DB_USER}
