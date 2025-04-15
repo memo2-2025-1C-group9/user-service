@@ -3,16 +3,14 @@
 # Establecer PYTHONPATH para que pytest encuentre el módulo app
 export PYTHONPATH=/app
 
-# Si estamos en modo test, ejecutamos los tests
-if [ "$2" = "test" ]; then
-    export TESTING=1
-    # Ejecutar los tests con coverage y sin captura de salida
-    pytest tests/ -v --cov=app --cov=tests --cov-report=term-missing --capture=no
-    exit $?
-fi
-
-# Si no estamos en modo test, iniciamos la aplicación FastAPI
-if [ "$2" = "app" ]; then
-    export TESTING=0
-    gunicorn app.main:app --worker-class uvicorn.workers.UvicornWorker --bind "$HOST:$PORT"
+# Verificar si se proporcionó un argumento
+if [ "$1" = "test" ]; then
+    echo "Ejecutando tests..."
+    pytest tests/
+elif [ "$1" = "app" ]; then
+    echo "Iniciando la aplicación..."
+    uvicorn app.main:app --host $HOST --port $PORT
+else
+    echo "Uso: /entrypoint.sh [test|app]"
+    exit 1
 fi
