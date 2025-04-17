@@ -31,7 +31,18 @@ def block_user(user: User, db: Session):
 def authenticate_user(db: Session, email: str, password: str):
     try:
         logging.info(f"Intentando autenticar usuario con email: {email}")
-        user = get_user_by_email(db, email)
+        
+        try:
+            user = get_user_by_email(db, email)
+        except Exception as db_error:
+            logging.error(f"Error de base de datos: {str(db_error)}")
+            logging.error(traceback.format_exc())
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Error al conectar con la base de datos",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+            
         if not user:
             logging.info(f"Usuario con email {email} no encontrado")
             return False
@@ -47,7 +58,7 @@ def authenticate_user(db: Session, email: str, password: str):
                     db.rollback()
                     raise HTTPException(
                         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        detail=f"Error al desbloquear usuario: {str(e)}",
+                        detail="Error al procesar la solicitud",
                         headers={"WWW-Authenticate": "Bearer"},
                     )
             else:
@@ -96,7 +107,7 @@ def authenticate_user(db: Session, email: str, password: str):
                 db.rollback()
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"Error al procesar credenciales: {str(e)}",
+                    detail="Error al procesar la solicitud",
                     headers={"WWW-Authenticate": "Bearer"},
                 )
 
@@ -117,7 +128,7 @@ def authenticate_user(db: Session, email: str, password: str):
         logging.error(traceback.format_exc())
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error en autenticación: {str(e)}",
+            detail="Error en el servicio de autenticación",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
