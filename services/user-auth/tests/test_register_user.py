@@ -138,7 +138,8 @@ def test_register_user_invalid_email(client, setup_test_db):
         },
     )
     assert response.status_code == 422
-    assert "value is not a valid email address" in response.json()["detail"][0]["msg"]
+    # Verificar que el mensaje de error contiene información sobre email inválido
+    assert "email address" in response.json()["detail"]
 
 
 def test_register_user_missing_required_fields(client, setup_test_db):
@@ -148,8 +149,12 @@ def test_register_user_missing_required_fields(client, setup_test_db):
         json={"email": "john@example.com", "password": "password123"},
     )
     assert response.status_code == 422
-    assert "Field required" in response.json()["detail"][0]["msg"]
-    assert response.json()["detail"][0]["loc"] == ["body", "name"]
+    # Verificar que el mensaje de error contiene información sobre campo requerido
+    assert "Field required" in response.json()["detail"]
+    # También podemos verificar que la respuesta es del formato Problem+JSON
+    assert "type" in response.json()
+    assert "title" in response.json()
+    assert "status" in response.json()
 
 
 def test_register_user_short_password(client, setup_test_db):
@@ -159,10 +164,8 @@ def test_register_user_short_password(client, setup_test_db):
         json={"name": "John Doe", "email": "john@example.com", "password": "123"},
     )
     assert response.status_code == 422
-    assert (
-        response.json()["detail"][0]["msg"]
-        == "Value error, La contraseña debe tener al menos 6 caracteres."
-    )
+    # Verificar que el mensaje contiene información sobre la longitud de la contraseña
+    assert "contraseña debe tener al menos 6 caracteres" in response.json()["detail"]
 
 
 def test_register_user_non_alphanumeric_password(client, setup_test_db):
@@ -172,10 +175,8 @@ def test_register_user_non_alphanumeric_password(client, setup_test_db):
         json={"name": "John Doe", "email": "john@example.com", "password": "pass@123"},
     )
     assert response.status_code == 422
-    assert (
-        response.json()["detail"][0]["msg"]
-        == "Value error, La contraseña debe ser alfanumérica."
-    )
+    # Verificar que el mensaje contiene información sobre caracteres alfanuméricos
+    assert "contraseña debe ser alfanumérica" in response.json()["detail"]
 
 
 def test_register_user_name_with_special_characters(client, setup_test_db):
@@ -189,7 +190,5 @@ def test_register_user_name_with_special_characters(client, setup_test_db):
         },
     )
     assert response.status_code == 422
-    assert (
-        response.json()["detail"][0]["msg"]
-        == "Value error, El nombre no puede contener caracteres especiales."
-    )
+    # Verificar que el mensaje contiene información sobre caracteres especiales en el nombre
+    assert "nombre no puede contener caracteres especiales" in response.json()["detail"]
