@@ -49,7 +49,6 @@ async def login_for_access_token(
         return handle_login_user(db, credentials)
 
     except ValidationError as e:
-        # Error en la validación de los datos de entrada
         error_detail = "Formato de email o contraseña inválido"
         if hasattr(e, "errors") and e.errors():
             error_detail = "; ".join([err["msg"] for err in e.errors()])
@@ -63,12 +62,9 @@ async def login_for_access_token(
         )
 
     except HTTPException:
-        # No capturar las HTTPExceptions - dejar que fluyan directamente
-        # Esto es clave para mantener el código de estado original
         raise
 
     except Exception as e:
-        # Para cualquier otra excepción, devolvemos un error 500 con mensaje genérico
         logging.error(f"Exception no manejada en login: {str(e)}")
         logging.error(traceback.format_exc())
 

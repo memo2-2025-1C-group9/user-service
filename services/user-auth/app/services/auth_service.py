@@ -37,9 +37,7 @@ def authenticate_user(db: Session, email: str, password: str):
             return False
 
         if user.is_blocked:
-            # si esta bloqueada por tiempo, debo de verificar si el tiempo de bloqueo ya paso
             if user.blocked_until and user.blocked_until < datetime.now():
-                # si el tiempo de bloqueo ha pasado, lo desbloqueo y reseteo los intentos fallidos
                 try:
                     logging.info(f"Desbloqueando usuario: {email}")
                     user.is_blocked = False
@@ -53,7 +51,6 @@ def authenticate_user(db: Session, email: str, password: str):
                         headers={"WWW-Authenticate": "Bearer"},
                     )
             else:
-                # si el tiempo de bloqueo no ha pasado, sigue bloqueado
                 logging.warning(f"Intento de login con usuario bloqueado: {email}")
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
@@ -62,22 +59,19 @@ def authenticate_user(db: Session, email: str, password: str):
                 )
 
         if not user.password == password:
-            # si la contraseña no es valida, le sumo un intento fallido
             try:
                 logging.info(f"Contraseña incorrecta para: {email}")
-                # si es el primer intento fallido, le guardo la fecha y hora
                 if (
                     (not user.first_login_failure)
                     or user.first_login_failure + LOCK_TIME_LOGIN_WINDOW
                     < datetime.now()
-                ):  # la ventana de tiempo no existe o ya paso
+                ):
                     user.failed_login_attempts = 0
                     user.first_login_failure = datetime.now()
                     logging.info(
                         f"Primer intento fallido o fuera de ventana para: {email}"
                     )
 
-                # si no entra al if, significa que esta dentro de la ventana de tiempo
                 user.failed_login_attempts += 1
                 logging.info(
                     f"Incrementando intentos fallidos para {email}: {user.failed_login_attempts}"
@@ -86,7 +80,6 @@ def authenticate_user(db: Session, email: str, password: str):
                 db.commit()
 
                 if user.failed_login_attempts >= settings.MAX_FAILED_LOGIN_ATTEMPTS:
-                    # si el numero de intentos fallidos es mayor o igual al maximo, lo bloqueo
                     logging.warning(
                         f"Bloqueando usuario por múltiples intentos: {email}"
                     )
@@ -97,10 +90,8 @@ def authenticate_user(db: Session, email: str, password: str):
                         headers={"WWW-Authenticate": "Bearer"},
                     )
             except HTTPException as e:
-                # Reenvía la excepción HTTP si es una que hemos creado
                 raise e
             except Exception as e:
-                # Si hay un error en la operación de DB, hacemos rollback y lanzamos excepción controlada
                 logging.error(f"Error al registrar intento fallido: {str(e)}")
                 db.rollback()
                 raise HTTPException(
@@ -111,22 +102,17 @@ def authenticate_user(db: Session, email: str, password: str):
 
             return False
 
-        # si la contraseña es correcta, reseteo los intentos fallidos
         try:
             logging.info(f"Login exitoso para: {email}")
             reset_failed_attempts(user, db)
         except Exception as e:
             db.rollback()
-            # No lanzamos excepción aquí porque el login sigue siendo válido
-            # Solo avisamos del error pero permitimos continuar
             logging.error(f"Error al resetear intentos fallidos: {str(e)}")
 
         return user
     except HTTPException as e:
-        # Reenvía la excepción HTTP si es una que hemos creado
         raise e
     except Exception as e:
-        # Para cualquier otra excepción, devolvemos un error controlado
         logging.error(f"Error no controlado en autenticación: {str(e)}")
         logging.error(traceback.format_exc())
         raise HTTPException(
@@ -163,7 +149,6 @@ def login_user(db: Session, credentials: UserLogin):
             )
 
     except HTTPException as e:
-        # Reenvía la excepción HTTP si es una que hemos creado
         raise e
     except Exception as e:
         logging.error(f"Error en login: {str(e)}")
