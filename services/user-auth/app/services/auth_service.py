@@ -27,53 +27,58 @@ def block_user(user: User, db: Session):
 
 
 def authenticate_user(db: Session, email: str, password: str):
-    user = get_user_by_email(db, email)
-    if not user:
+    try:
+        user = get_user_by_email(db, email)
+        if not user:
+            return False
+
+        if user.is_blocked:
+            # si esta bloqueada por tiempo, debo de verificar si el tiempo de bloqueo ya paso
+            if user.blocked_until and user.blocked_until < datetime.now():
+                # si el tiempo de bloqueo ha pasado, lo desbloqueo y reseteo los intentos fallidos
+                user.is_blocked = False
+                reset_failed_attempts(user, db)
+            else:
+                # si el tiempo de bloqueo no ha pasado, sigue bloqueado
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="User is blocked",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+
+        if not user.password == password:
+            # si la contraseña no es valida, le sumo un intento fallido
+            # si es el primer intento fallido, le guardo la fecha y hora
+            if (
+                not user.first_login_failure
+            ) or user.first_login_failure + LOCK_TIME_LOGIN_WINDOW < datetime.now():  # la ventana de tiempo no existe o ya paso
+                user.failed_login_attempts = 0
+                user.first_login_failure = datetime.now()
+
+            # si no entra al if, significa que esta dentro de la ventana de tiempo
+            user.failed_login_attempts += 1
+            db.add(user)
+            db.commit()
+
+            if user.failed_login_attempts >= settings.MAX_FAILED_LOGIN_ATTEMPTS:
+                # si el numero de intentos fallidos es mayor o igual al maximo, lo bloqueo
+                block_user(user, db)
+
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="User is blocked",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+
+            return False
+
+        # si la contraseña es correcta, reseteo los intentos fallidos
+        reset_failed_attempts(user, db)
+
+        return user
+    except Exception as e:
+        print(f"Error en autenticación: {str(e)}")
         return False
-    if user.is_blocked:
-        # si esta bloqueada por tiempo, debo de verificar si el tiempo de bloqueo ya paso
-        if user.blocked_until and user.blocked_until < datetime.now():
-            # si el tiempo de bloqueo ha pasado, lo desbloqueo y reseteo los intentos fallidos
-            user.is_blocked = False
-            reset_failed_attempts(user, db)
-        else:
-            # si el tiempo de bloqueo no ha pasado, sigue bloqueado
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="User is blocked",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-
-    if not user.password == password:
-        # si la contraseña no es valida, le sumo un intento fallido
-        # si es el primer intento fallido, le guardo la fecha y hora
-        if (
-            not user.first_login_failure
-        ) or user.first_login_failure + LOCK_TIME_LOGIN_WINDOW < datetime.now():  # la ventana de tiempo no existe o ya paso
-            user.failed_login_attempts = 0
-            user.first_login_failure = datetime.now()
-
-        # si no entra al if, significa que esta dentro de la ventana de tiempo
-        user.failed_login_attempts += 1
-        db.add(user)
-        db.commit()
-
-        if user.failed_login_attempts >= settings.MAX_FAILED_LOGIN_ATTEMPTS:
-            # si el numero de intentos fallidos es mayor o igual al maximo, lo bloqueo
-            block_user(user, db)
-
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="User is blocked",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-
-        return False
-
-    # si la contraseña es correcta, reseteo los intentos fallidos
-    reset_failed_attempts(user, db)
-
-    return user
 
 
 def login_user(db: Session, credentials: UserLogin):
@@ -93,6 +98,11 @@ def login_user(db: Session, credentials: UserLogin):
 
     except HTTPException as e:
         raise e
-
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Error interno")
+
+        print(f"Error en login: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
