@@ -8,8 +8,21 @@ import logging
 import traceback
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+# Configurar CORS para permitir peticiones desde el frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "*"
+    ],  # En producción, cambia esto a las URLs específicas de tu frontend
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+)
 
 Base.metadata.create_all(bind=engine)
 app.include_router(user_router, prefix="/api/v1")
@@ -39,8 +52,12 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
     # Asegurar que haya headers adecuados
     headers = exc.headers or {}
-    if "Content-Type" not in headers:
-        headers["Content-Type"] = "application/problem+json"
+
+    # Importante: Content-Type debe ser application/problem+json para que el cliente lo maneje bien
+    headers["Content-Type"] = "application/problem+json"
+
+    # Importante: añadir headers CORS para permitir que el front reciba errores
+    headers["Access-Control-Allow-Origin"] = "*"
 
     return problem_detail_response(
         status_code=exc.status_code,

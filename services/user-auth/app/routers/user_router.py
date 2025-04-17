@@ -62,20 +62,10 @@ async def login_for_access_token(
             detail=error_detail,
         )
 
-    except HTTPException as e:
-        # Reenvía la excepción HTTP pero con el formato que queremos
-        logging.error(f"HTTPException en login: {e.detail} (status: {e.status_code})")
-
-        # Añadir header explícito de tipo de contenido para asegurar que el cliente lo maneje correctamente
-        headers = e.headers if hasattr(e, "headers") else {}
-        if "Content-Type" not in headers:
-            headers["Content-Type"] = "application/problem+json"
-
-        raise HTTPException(
-            status_code=e.status_code,
-            detail=e.detail,
-            headers=headers,
-        )
+    except HTTPException:
+        # No capturar las HTTPExceptions - dejar que fluyan directamente
+        # Esto es clave para mantener el código de estado original
+        raise
 
     except Exception as e:
         # Para cualquier otra excepción, devolvemos un error 500 con mensaje genérico
