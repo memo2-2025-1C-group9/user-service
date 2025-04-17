@@ -37,23 +37,35 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: Session = Depends(get_db),
-) -> Token:
+):
     try:
         credentials = UserLogin(email=form_data.username, password=form_data.password)
         return handle_login_user(db, credentials)
 
     except ValidationError as e:
+        # Error en la validación de los datos de entrada
+        error_detail = "Formato de email o contraseña inválido"
+        if hasattr(e, "errors") and e.errors():
+            error_detail = "; ".join([err["msg"] for err in e.errors()])
+
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid input email or password",
+            detail=error_detail,
         )
 
     except HTTPException as e:
-        raise e
+        # Reenvía la excepción HTTP pero con el formato que queremos
+        raise HTTPException(
+            status_code=e.status_code,
+            detail=e.detail,
+            headers=e.headers if hasattr(e, "headers") else None,
+        )
 
     except Exception as e:
+        # Para cualquier otra excepción, devolvemos un error 500 con mensaje genérico
         raise HTTPException(
-            status_code=500, detail=f"Error interno del servidor: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor",
         )
 
 
