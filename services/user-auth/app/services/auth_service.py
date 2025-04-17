@@ -31,7 +31,7 @@ def block_user(user: User, db: Session):
 def authenticate_user(db: Session, email: str, password: str):
     try:
         logging.info(f"Intentando autenticar usuario con email: {email}")
-        
+
         try:
             user = get_user_by_email(db, email)
         except Exception as db_error:
@@ -42,7 +42,7 @@ def authenticate_user(db: Session, email: str, password: str):
                 detail="Error al conectar con la base de datos",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-            
+
         if not user:
             logging.info(f"Usuario con email {email} no encontrado")
             return False
