@@ -41,6 +41,8 @@ class UserLogin(BaseModel):
     @field_validator("password")
     @classmethod
     def validate_password(cls, v):
+        if not v:
+            raise ValueError("La contraseña no puede estar vacía.")
         if len(v) < 6:
             raise ValueError("La contraseña debe tener al menos 6 caracteres.")
         if not v.isalnum():

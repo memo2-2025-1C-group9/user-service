@@ -6,11 +6,6 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-# Mostrar todas las variables de entorno
-logger.debug("Variables de entorno disponibles:")
-for key, value in os.environ.items():
-    logger.debug(f"{key}: {value}")
-
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(

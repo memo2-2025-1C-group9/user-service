@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Establecer PYTHONPATH para que pytest encuentre el módulo app
+
 export PYTHONPATH=/app
 
-# Verificar si se proporcionó un argumento
+
 if [ "$1" = "test" ]; then
     echo "Ejecutando tests..."
     pytest tests/

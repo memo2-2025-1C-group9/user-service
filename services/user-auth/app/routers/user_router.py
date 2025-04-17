@@ -8,6 +8,8 @@ from app.db.dependencies import get_db
 from typing import Annotated
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import ValidationError
+import logging
+import traceback
 
 router = APIRouter()
 
@@ -26,8 +28,11 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
             },
         }
     except HTTPException as e:
+        logging.error(f"HTTPException en register_user: {e.detail}")
         raise e
     except Exception as e:
+        logging.error(f"Exception en register_user: {str(e)}")
+        logging.error(traceback.format_exc())
         raise HTTPException(
             status_code=500, detail=f"Error interno del servidor: {str(e)}"
         )
@@ -37,23 +42,35 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: Session = Depends(get_db),
-) -> Token:
+):
     try:
+        logging.info(f"Intento de login para usuario: {form_data.username}")
         credentials = UserLogin(email=form_data.username, password=form_data.password)
         return handle_login_user(db, credentials)
 
     except ValidationError as e:
+        error_detail = "Formato de email o contraseña inválido"
+        if hasattr(e, "errors") and e.errors():
+            error_detail = "; ".join([err["msg"] for err in e.errors()])
+
+        logging.error(f"Error de validación en login: {error_detail}")
+        logging.error(traceback.format_exc())
+
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid input email or password",
+            detail=error_detail,
         )
 
-    except HTTPException as e:
-        raise e
+    except HTTPException:
+        raise
 
     except Exception as e:
+        logging.error(f"Exception no manejada en login: {str(e)}")
+        logging.error(traceback.format_exc())
+
         raise HTTPException(
-            status_code=500, detail=f"Error interno del servidor: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor",
         )
 
 

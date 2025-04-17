@@ -1,4 +1,5 @@
 from fastapi.responses import JSONResponse
+from typing import Dict, Any, Optional
 
 
 def problem_detail_response(
@@ -7,15 +8,24 @@ def problem_detail_response(
     detail: str,
     type: str = "about:blank",
     instance: str = "",
+    headers: Optional[Dict[str, str]] = None,
 ):
+    """
+    Crea una respuesta de error en formato RFC 7807 Problem Details.
+
+    Este formato es el estándar para APIs REST.
+    """
+    content = {
+        "type": type,
+        "title": title,
+        "status": status_code,
+        "detail": detail,
+        "instance": instance,
+    }
+
     return JSONResponse(
         status_code=status_code,
-        content={
-            "type": type,
-            "title": title,
-            "status": status_code,
-            "detail": detail,
-            "instance": instance,
-        },
+        content=content,
+        headers=headers,
         media_type="application/problem+json",
     )
