@@ -42,8 +42,7 @@ async def login_for_access_token(
         # Validar formato básico del email
         if not "@" in form_data.username:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid email format"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid email format"
             )
 
         credentials = UserLogin(email=form_data.username, password=form_data.password)
@@ -53,17 +52,14 @@ async def login_for_access_token(
         raise e
     except ValidationError as e:
         # Si hay un error de validación, lo transformamos a 400
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         # Para cualquier otro error, lo transformamos a 401
         print(f"Error en login: {str(e)}")  # Para debug
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"}
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
 

@@ -84,7 +84,7 @@ def authenticate_user(db: Session, email: str, password: str):
 def login_user(db: Session, credentials: UserLogin):
     # Intentar autenticar al usuario
     user = authenticate_user(db, credentials.email, credentials.password)
-    
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -96,5 +96,5 @@ def login_user(db: Session, credentials: UserLogin):
     access_token = create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
-    
+
     return Token(access_token=access_token, token_type="bearer")
