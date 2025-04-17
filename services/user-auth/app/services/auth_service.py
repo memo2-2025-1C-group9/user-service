@@ -76,9 +76,17 @@ def authenticate_user(db: Session, email: str, password: str):
         reset_failed_attempts(user, db)
 
         return user
+    except HTTPException as e:
+        # Si es una HTTPException, la propagamos
+        raise e
     except Exception as e:
+        # Para cualquier otro error, lo registramos y propagamos como 401
         print(f"Error en autenticación: {str(e)}")
-        return False
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
 
 def login_user(db: Session, credentials: UserLogin):
