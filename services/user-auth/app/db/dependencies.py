@@ -9,7 +9,6 @@ def get_db():
         db = SessionLocal()
         yield db
     except HTTPException:
-        # Re-lanzar las HTTPException sin modificar para mantener su código y mensaje original
         raise
     except Exception as e:
         logging.error(f"Error real de conexión a DB: {str(e)}")
@@ -22,5 +21,4 @@ def get_db():
                 db.close()
             except Exception as e:
                 logging.error(f"Error al cerrar conexión DB: {str(e)}")
-                # No lanzamos excepción aquí para evitar sobreescribir la respuesta original
-                # Solo registramos el error
+

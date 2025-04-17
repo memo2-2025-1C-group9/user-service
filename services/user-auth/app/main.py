@@ -43,18 +43,14 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     elif exc.status_code < 500:
         title = "Error de Cliente"
 
-    # Añadir log detallado del error
     logging.error(
         f"HTTPException manejada: {exc.detail} (status: {exc.status_code}, url: {request.url})"
     )
 
-    # Asegurar que haya headers adecuados
     headers = exc.headers or {}
 
-    # Importante: Content-Type debe ser application/problem+json para que el cliente lo maneje bien
     headers["Content-Type"] = "application/problem+json"
 
-    # Importante: añadir headers CORS para permitir que el front reciba errores
     headers["Access-Control-Allow-Origin"] = "*"
 
     return problem_detail_response(
@@ -80,7 +76,6 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     logging.error(f"Error de validación: {str(exc)}")
     logging.error(traceback.format_exc())
 
-    # Formatear los errores de validación en un mensaje legible
     error_details = []
     for error in exc.errors():
         loc = " -> ".join([str(x) for x in error.get("loc", [])])
@@ -118,7 +113,7 @@ async def generic_exception_handler(request: Request, exc: Exception):
 @app.get("/health")
 async def health_check():
     try:
-        # Intentar conectar a la base de datos
+
         with engine.connect() as connection:
             connection.execute(text("SELECT 1"))
         return {"status": "healthy", "database": "connected"}

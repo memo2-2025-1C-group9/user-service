@@ -10,7 +10,6 @@ def get_user_by_email(db: Session, email: str) -> User | None:
 
 
 def create_user(db: Session, user_data: UserCreate):
-    # Verificar si el email ya existe
     existing_user = get_user_by_email(db, user_data.email)
     if existing_user:
         raise HTTPException(
