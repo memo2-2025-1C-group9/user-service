@@ -38,15 +38,6 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
-    @field_validator("password")
-    @classmethod
-    def validate_password(cls, v):
-        if len(v) < 6:
-            raise ValueError("La contraseña debe tener al menos 6 caracteres.")
-        if not v.isalnum():
-            raise ValueError("La contraseña debe ser alfanumérica.")
-        return v
-
 
 class CurrentUser(BaseModel):
     email: EmailStr
