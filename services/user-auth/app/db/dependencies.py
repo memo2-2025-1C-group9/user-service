@@ -21,4 +21,3 @@ def get_db():
                 db.close()
             except Exception as e:
                 logging.error(f"Error al cerrar conexión DB: {str(e)}")
-
