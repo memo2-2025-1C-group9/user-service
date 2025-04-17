@@ -82,41 +82,19 @@ def authenticate_user(db: Session, email: str, password: str):
 
 
 def login_user(db: Session, credentials: UserLogin):
-    try:
-        # Validar formato de email
-        if not "@" in credentials.email:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid email format",
-            )
-
-        # Intentar autenticar al usuario
-        user = authenticate_user(db, credentials.email, credentials.password)
-
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect email or password",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-
-        # Generar token de acceso
-        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = create_access_token(
-            data={"sub": user.email}, expires_delta=access_token_expires
-        )
-
-        return Token(access_token=access_token, token_type="bearer")
-
-    except HTTPException as e:
-        # Si ya es una HTTPException, la propagamos tal cual
-        raise e
-
-    except Exception as e:
-        # Para cualquier otro error, lo registramos y devolvemos un error 401
-        print(f"Error en login: {str(e)}")  # Para debug
+    # Intentar autenticar al usuario
+    user = authenticate_user(db, credentials.email, credentials.password)
+    
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.email}, expires_delta=access_token_expires
+    )
+    
+    return Token(access_token=access_token, token_type="bearer")
