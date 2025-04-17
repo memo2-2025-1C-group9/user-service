@@ -7,6 +7,7 @@ from app.models.user import User
 from app.core.security import create_access_token
 from app.core.config import settings
 import logging
+import traceback
 
 LOCK_TIME_LOGIN_WINDOW = timedelta(minutes=settings.LOCK_TIME_LOGIN_WINDOW)
 LOCK_USER_TIME = timedelta(minutes=settings.LOCK_USER_TIME)
@@ -29,8 +30,10 @@ def block_user(user: User, db: Session):
 
 def authenticate_user(db: Session, email: str, password: str):
     try:
+        logging.info(f"Intentando autenticar usuario con email: {email}")
         user = get_user_by_email(db, email)
         if not user:
+            logging.info(f"Usuario con email {email} no encontrado")
             return False
 
         if user.is_blocked:
@@ -38,9 +41,11 @@ def authenticate_user(db: Session, email: str, password: str):
             if user.blocked_until and user.blocked_until < datetime.now():
                 # si el tiempo de bloqueo ha pasado, lo desbloqueo y reseteo los intentos fallidos
                 try:
+                    logging.info(f"Desbloqueando usuario: {email}")
                     user.is_blocked = False
                     reset_failed_attempts(user, db)
                 except Exception as e:
+                    logging.error(f"Error al desbloquear usuario: {str(e)}")
                     db.rollback()
                     raise HTTPException(
                         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -49,6 +54,7 @@ def authenticate_user(db: Session, email: str, password: str):
                     )
             else:
                 # si el tiempo de bloqueo no ha pasado, sigue bloqueado
+                logging.warning(f"Intento de login con usuario bloqueado: {email}")
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Usuario bloqueado",
@@ -58,6 +64,7 @@ def authenticate_user(db: Session, email: str, password: str):
         if not user.password == password:
             # si la contraseña no es valida, le sumo un intento fallido
             try:
+                logging.info(f"Contraseña incorrecta para: {email}")
                 # si es el primer intento fallido, le guardo la fecha y hora
                 if (
                     (not user.first_login_failure)
@@ -66,14 +73,23 @@ def authenticate_user(db: Session, email: str, password: str):
                 ):  # la ventana de tiempo no existe o ya paso
                     user.failed_login_attempts = 0
                     user.first_login_failure = datetime.now()
+                    logging.info(
+                        f"Primer intento fallido o fuera de ventana para: {email}"
+                    )
 
                 # si no entra al if, significa que esta dentro de la ventana de tiempo
                 user.failed_login_attempts += 1
+                logging.info(
+                    f"Incrementando intentos fallidos para {email}: {user.failed_login_attempts}"
+                )
                 db.add(user)
                 db.commit()
 
                 if user.failed_login_attempts >= settings.MAX_FAILED_LOGIN_ATTEMPTS:
                     # si el numero de intentos fallidos es mayor o igual al maximo, lo bloqueo
+                    logging.warning(
+                        f"Bloqueando usuario por múltiples intentos: {email}"
+                    )
                     block_user(user, db)
                     raise HTTPException(
                         status_code=status.HTTP_403_FORBIDDEN,
@@ -85,6 +101,7 @@ def authenticate_user(db: Session, email: str, password: str):
                 raise e
             except Exception as e:
                 # Si hay un error en la operación de DB, hacemos rollback y lanzamos excepción controlada
+                logging.error(f"Error al registrar intento fallido: {str(e)}")
                 db.rollback()
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -96,6 +113,7 @@ def authenticate_user(db: Session, email: str, password: str):
 
         # si la contraseña es correcta, reseteo los intentos fallidos
         try:
+            logging.info(f"Login exitoso para: {email}")
             reset_failed_attempts(user, db)
         except Exception as e:
             db.rollback()
@@ -109,6 +127,8 @@ def authenticate_user(db: Session, email: str, password: str):
         raise e
     except Exception as e:
         # Para cualquier otra excepción, devolvemos un error controlado
+        logging.error(f"Error no controlado en autenticación: {str(e)}")
+        logging.error(traceback.format_exc())
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error en autenticación: {str(e)}",
