@@ -34,29 +34,32 @@ def get_user(db, email: str):
     return None
 
 
-async def get_current_user(
-    token: Annotated[str, Depends(oauth2_scheme)],
-    db: Session = Depends(get_db),
-):
-    credentials_exception = HTTPException(
+def create_credentials_exception():
+    return HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+
+async def get_current_user(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    db: Session = Depends(get_db),
+):
     try:
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
         email = payload.get("sub")
         if email is None:
-            raise credentials_exception
+            raise create_credentials_exception()
         token_data = TokenData(email=email)
     except InvalidTokenError:
-        raise credentials_exception
+        raise create_credentials_exception()
 
     user = get_user(db, email=token_data.email)
     if user is None:
-        raise credentials_exception
+        raise create_credentials_exception()
     return user
 
 
