@@ -22,6 +22,7 @@ def create_user(db: Session, user_data: UserCreate):
         email=user_data.email,
         password=user_data.password,
         location=user_data.location,
+        is_teacher=user_data.is_teacher,
     )
     db.add(new_user)
     db.commit()
