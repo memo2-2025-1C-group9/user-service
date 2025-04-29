@@ -192,3 +192,35 @@ def test_register_user_name_with_special_characters(client, setup_test_db):
     assert response.status_code == 422
     # Verificar que el mensaje contiene información sobre caracteres especiales en el nombre
     assert "nombre no puede contener caracteres especiales" in response.json()["detail"]
+
+
+def test_register_teacher_user(client, setup_test_db):
+    # Registrar un usuario como profesor
+    response = client.post(
+        "/api/v1/register",
+        json={
+            "name": "John Teacher",
+            "email": "teacher@example.com",
+            "password": "password123",
+            "location": "Buenos Aires",
+            "is_teacher": True
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["status"] == "success"
+    assert response.json()["data"]["is_teacher"] is True
+
+def test_register_student_user(client, setup_test_db):
+    # Registrar un usuario como estudiante (default)
+    response = client.post(
+        "/api/v1/register",
+        json={
+            "name": "John Student",
+            "email": "student@example.com",
+            "password": "password123",
+            "location": "Buenos Aires",
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["status"] == "success"
+    assert response.json()["data"]["is_teacher"] is False

@@ -9,6 +9,7 @@ class User(Base):
     email = Column(String, unique=True, nullable=False)
     password = Column(String, nullable=False)
     location = Column(String, nullable=True)
+    is_teacher = Column(Boolean, default=False, nullable=False)
     is_blocked = Column(Boolean, default=False)
     failed_login_attempts = Column(Integer, default=0)
     first_login_failure = Column(DateTime, default=None)
