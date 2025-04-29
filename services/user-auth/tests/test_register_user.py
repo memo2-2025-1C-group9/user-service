@@ -225,3 +225,36 @@ def test_register_student_user(client, setup_test_db):
     assert response.status_code == 200
     assert response.json()["status"] == "success"
     assert response.json()["data"]["is_teacher"] is False
+
+
+def test_register_user_with_academic_level(client, setup_test_db):
+    # Registrar un usuario con nivel académico específico
+    response = client.post(
+        "/api/v1/register",
+        json={
+            "name": "John Academic",
+            "email": "academic@example.com",
+            "password": "password123",
+            "location": "Buenos Aires",
+            "academic_level": 3,
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["status"] == "success"
+    assert response.json()["data"]["academic_level"] == 3
+
+
+def test_register_user_default_academic_level(client, setup_test_db):
+    # Registrar un usuario sin especificar nivel académico (debería ser 0)
+    response = client.post(
+        "/api/v1/register",
+        json={
+            "name": "John Default",
+            "email": "default@example.com",
+            "password": "password123",
+            "location": "Buenos Aires",
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["status"] == "success"
+    assert response.json()["data"]["academic_level"] == 0
