@@ -1,11 +1,18 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
-from app.schemas.user import UserCreate, UserLogin, Token, CurrentUser
-from app.controllers.user_controller import handle_register_user, handle_login_user
+from app.schemas.user import UserCreate, UserLogin, Token, CurrentUser, User, UserUpdate
+from app.controllers.user_controller import (
+    handle_register_user,
+    handle_login_user,
+    handle_get_users,
+    handle_get_user,
+    handle_edit_user,
+    handle_delete_user,
+)
 from app.core.security import get_current_active_user
 from app.db.dependencies import get_db
-from typing import Annotated
+from typing import Annotated, List
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import ValidationError
 import logging
@@ -14,7 +21,7 @@ import traceback
 router = APIRouter()
 
 
-@router.post("/register")
+@router.post("/register", response_model=dict)
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
     try:
         user_data = handle_register_user(db, user)
@@ -26,6 +33,7 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
                 "email": user_data.email,
                 "location": user_data.location,
                 "is_teacher": user_data.is_teacher,
+                "academic_level": user_data.academic_level,
             },
         }
     except HTTPException as e:
@@ -36,6 +44,90 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
         logging.error(traceback.format_exc())
         raise HTTPException(
             status_code=500, detail=f"Error interno del servidor: {str(e)}"
+        )
+
+
+@router.get("/users", response_model=List[User])
+async def get_users(
+    current_user: Annotated[CurrentUser, Depends(get_current_active_user)],
+    db: Session = Depends(get_db),
+):
+    """
+    Obtener lista de todos los usuarios.
+    Requiere autenticación.
+    """
+    try:
+        return handle_get_users(db)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error interno del servidor: {str(e)}",
+        )
+
+
+@router.get("/user/{user_id}", response_model=User)
+async def get_user(
+    user_id: int,
+    current_user: Annotated[CurrentUser, Depends(get_current_active_user)],
+    db: Session = Depends(get_db),
+):
+    """
+    Obtener información de un usuario específico por ID.
+    Requiere autenticación.
+    """
+    try:
+        return handle_get_user(db, user_id)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error interno del servidor: {str(e)}",
+        )
+
+
+@router.put("/edituser/{user_id}", response_model=User)
+async def edit_user(
+    user_id: int,
+    user_data: UserUpdate,
+    current_user: Annotated[CurrentUser, Depends(get_current_active_user)],
+    db: Session = Depends(get_db),
+):
+    """
+    Actualizar información de un usuario específico por ID.
+    Requiere autenticación.
+    """
+    try:
+        return handle_edit_user(db, user_id, user_data)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error interno del servidor: {str(e)}",
+        )
+
+
+@router.delete("/deleteuser/{user_id}", response_model=User)
+async def delete_user(
+    user_id: int,
+    current_user: Annotated[CurrentUser, Depends(get_current_active_user)],
+    db: Session = Depends(get_db),
+):
+    """
+    Eliminar un usuario específico por ID.
+    Requiere autenticación.
+    """
+    try:
+        return handle_delete_user(db, user_id)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error interno del servidor: {str(e)}",
         )
 
 
