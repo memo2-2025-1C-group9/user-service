@@ -203,12 +203,13 @@ def test_register_teacher_user(client, setup_test_db):
             "email": "teacher@example.com",
             "password": "password123",
             "location": "Buenos Aires",
-            "is_teacher": True
+            "is_teacher": True,
         },
     )
     assert response.status_code == 200
     assert response.json()["status"] == "success"
     assert response.json()["data"]["is_teacher"] is True
+
 
 def test_register_student_user(client, setup_test_db):
     # Registrar un usuario como estudiante (default)
