@@ -145,10 +145,15 @@ def test_edit_nonexistent_user(client, setup_test_db):
 
 
 def test_delete_user(client, setup_test_db):
-    # Registrar y login con un usuario
+    # Registrar y login con un usuario que será eliminado
     token = register_and_login_user(client)
 
-    # Eliminar el usuario
+    # Registrar y login con un segundo usuario para verificar el borrado
+    second_token = register_and_login_user(
+        client, name="Second User", email="second@example.com", password="password123"
+    )
+
+    # Eliminar el primer usuario
     response = client.delete(
         "/api/v1/deleteuser/1", headers={"Authorization": f"Bearer {token}"}
     )
@@ -158,9 +163,9 @@ def test_delete_user(client, setup_test_db):
     assert deleted_user["id"] == 1
     assert deleted_user["email"] == "test@example.com"
 
-    # Verificar que el usuario ya no existe
+    # Verificar que el usuario ya no existe usando el token del segundo usuario
     response = client.get(
-        "/api/v1/user/1", headers={"Authorization": f"Bearer {token}"}
+        "/api/v1/user/1", headers={"Authorization": f"Bearer {second_token}"}
     )
     assert response.status_code == 404
 
