@@ -25,6 +25,7 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
                 "name": user_data.name,
                 "email": user_data.email,
                 "location": user_data.location,
+                "is_teacher": user_data.is_teacher,
             },
         }
     except HTTPException as e:

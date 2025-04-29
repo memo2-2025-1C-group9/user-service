@@ -6,6 +6,7 @@ class UserBase(BaseModel):
     name: str
     email: EmailStr
     location: str | None = None
+    is_teacher: bool = False
 
     @field_validator("name")
     @classmethod
