@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: user-profile-service
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ENVIRONMENT
+        sync: false # Esto significa que se puede configurar manualmente en Render
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        fromService:
+          type: web
+          name: template-service
+          envVarKey: PORT
+      # Aquí se pueden agregar más variables de entorno según sea necesario 
