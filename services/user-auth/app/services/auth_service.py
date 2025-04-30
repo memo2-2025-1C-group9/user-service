@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from datetime import timedelta, datetime
 from fastapi import HTTPException, status
 from app.repositories.user_repository import get_user_by_email
-from app.schemas.user import UserLogin, Token
+from app.schemas.user import UserLogin, Token, ServiceLogin
 from app.models.user import User
 from app.core.security import create_access_token
 from app.core.config import settings
@@ -163,6 +163,40 @@ def login_user(db: Session, credentials: UserLogin):
         raise e
     except Exception as e:
         logging.error(f"Error en login: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+
+def authenticate_service(user: str, password: str):
+    if user == settings.SERVICE_USERNAME and password == settings.SERVICE_PASSWORD:
+        logging.info(f"Login exitoso para servicio")
+        return True
+    else:
+        logging.info(f"Contraseña incorrecta para servicio")
+        raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Credenciales incorrectas",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+    
+
+def login_service(credentials: ServiceLogin):
+    try:
+        if authenticate_service(credentials.user, credentials.password):
+            access_token_expires = timedelta(
+                minutes=settings.SERVICE_ACCESS_TOKEN_EXPIRE_MINUTES
+            )
+            access_token = create_access_token(
+                data={"service": credentials.user}, expires_delta=access_token_expires
+            )
+            return Token(access_token=access_token, token_type="bearer")
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logging.error(f"Error en login de servicio")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error interno del servidor",
