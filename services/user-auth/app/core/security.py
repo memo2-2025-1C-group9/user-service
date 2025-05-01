@@ -67,3 +67,24 @@ async def get_current_active_user(
     current_user: Annotated[CurrentUser, Depends(get_current_user)],
 ):
     return current_user
+
+
+async def get_current_service(
+    token: Annotated[str, Depends(oauth2_scheme)],
+):
+    try:
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
+        username = payload.get("service")
+        if username is None:
+            raise create_credentials_exception()
+        return username
+    except InvalidTokenError:
+        raise create_credentials_exception()
+
+
+async def get_current_active_service(
+    current_service: Annotated[str, Depends(get_current_service)],
+):
+    return current_service

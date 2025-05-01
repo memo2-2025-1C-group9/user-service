@@ -83,6 +83,7 @@ class UserLogin(BaseModel):
         return v
 
 
+
 class CurrentUser(UserBase):
     id: int
     model_config = ConfigDict(from_attributes=True)

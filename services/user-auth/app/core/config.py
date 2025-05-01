@@ -1,5 +1,4 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-import os
 import logging
 
 # Configurar logging
@@ -34,6 +33,10 @@ class Settings(BaseSettings):
     MAX_FAILED_LOGIN_ATTEMPTS: int
     LOCK_TIME_LOGIN_WINDOW: int
     LOCK_USER_TIME: int
+
+    SERVICE_USERNAME: str
+    SERVICE_PASSWORD: str
+    SERVICE_ACCESS_TOKEN_EXPIRE_MINUTES: int
 
 
 try:
