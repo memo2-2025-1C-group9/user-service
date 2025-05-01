@@ -83,9 +83,9 @@ class UserLogin(BaseModel):
         return v
 
 
-class CurrentUser(BaseModel):
-    email: EmailStr
-    name: str
+class CurrentUser(UserBase):
+    id: int
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserInDB(CurrentUser):
