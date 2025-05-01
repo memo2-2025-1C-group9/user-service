@@ -1,7 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
-from app.schemas.user import UserCreate, UserLogin, ServiceLogin, CurrentUser, User, UserUpdate
+from app.schemas.user import (
+    UserCreate,
+    UserLogin,
+    ServiceLogin,
+    CurrentUser,
+    User,
+    UserUpdate,
+)
 from app.controllers.user_controller import (
     handle_register_user,
     handle_login_user,
@@ -166,7 +173,8 @@ async def login_for_access_token(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error interno del servidor",
         )
-    
+
+
 @router.post("/token/service")
 async def login_for_access_service_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
@@ -204,6 +212,7 @@ async def read_users_me(
             status_code=500, detail=f"Error interno del servidor: {str(e)}"
         )
 
+
 @router.get("/service/me/")
 async def read_service(
     current_service: Annotated[CurrentUser, Depends(get_current_active_service)],
@@ -217,4 +226,45 @@ async def read_service(
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Error interno del servidor: {str(e)}"
+        )
+
+
+@router.get("/service/user/{user_id}", response_model=User)
+async def get_user_as_service(
+    user_id: int,
+    current_service: Annotated[str, Depends(get_current_active_service)],
+    db: Session = Depends(get_db),
+):
+    """
+    Obtener información de un usuario específico por ID.
+    Requiere autenticación de servicio.
+    """
+    try:
+        return handle_get_user(db, user_id)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error interno del servidor: {str(e)}",
+        )
+
+
+@router.get("/service/users", response_model=List[User])
+async def get_users_as_service(
+    current_service: Annotated[str, Depends(get_current_active_service)],
+    db: Session = Depends(get_db),
+):
+    """
+    Obtener lista de todos los usuarios.
+    Requiere autenticación de servicio.
+    """
+    try:
+        return handle_get_users(db)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error interno del servidor: {str(e)}",
         )

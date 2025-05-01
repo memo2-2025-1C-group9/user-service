@@ -228,8 +228,8 @@ def test_login_with_service_account(client, setup_test_db):
     response = client.post(
         "/api/v1/token/service",
         data={
-            "username": settings.SERVICE_USERNAME, 
-            "password": settings.SERVICE_PASSWORD
+            "username": settings.SERVICE_USERNAME,
+            "password": settings.SERVICE_PASSWORD,
         },
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
@@ -239,8 +239,7 @@ def test_login_with_service_account(client, setup_test_db):
     token = data["access_token"]
 
     response_me = client.get(
-        "/api/v1/service/me/",
-        headers={"Authorization": f"Bearer {token}"}
+        "/api/v1/service/me/", headers={"Authorization": f"Bearer {token}"}
     )
 
     assert response_me.status_code == 200
@@ -249,17 +248,13 @@ def test_login_with_service_account(client, setup_test_db):
     me_data = response_me.json()
     assert me_data == settings.SERVICE_USERNAME
 
+
 def test_login_fail_with_service_account(client, setup_test_db):
     # Intento de iniciar sesión con una cuenta de servicio con credenciales incorrectas
     response = client.post(
         "/api/v1/token/service",
-        data={
-            "username": "wronguser", 
-            "password": "wrongpassword"
-        },
+        data={"username": "wronguser", "password": "wrongpassword"},
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
 
     expect_error_response(response, 401)
-
-

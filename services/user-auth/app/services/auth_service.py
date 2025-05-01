@@ -177,11 +177,11 @@ def authenticate_service(user: str, password: str):
     else:
         logging.info(f"Contraseña incorrecta para servicio")
         raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Credenciales incorrectas",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-    
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Credenciales incorrectas",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
 
 def login_service(credentials: ServiceLogin):
     try:

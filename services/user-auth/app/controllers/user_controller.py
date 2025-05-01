@@ -33,5 +33,6 @@ def handle_edit_user(db: Session, user_id: int, user_data: UserUpdate):
 def handle_delete_user(db: Session, user_id: int):
     return remove_user(db, user_id)
 
+
 def handle_service_login(user: ServiceLogin):
     return login_service(user)

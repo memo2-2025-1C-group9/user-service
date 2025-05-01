@@ -82,9 +82,11 @@ class UserLogin(BaseModel):
             raise ValueError("La contraseña debe ser alfanumérica.")
         return v
 
+
 class ServiceLogin(BaseModel):
     user: str
     password: str
+
 
 class CurrentUser(BaseModel):
     email: EmailStr

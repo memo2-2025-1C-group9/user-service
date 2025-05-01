@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     SERVICE_PASSWORD: str
     SERVICE_ACCESS_TOKEN_EXPIRE_MINUTES: int
 
+
 try:
     settings = Settings()
     logger.debug("Configuración cargada exitosamente")
