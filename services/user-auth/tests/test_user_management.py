@@ -42,20 +42,27 @@ def setup_test_db():
 
 
 def register_and_login_user(
-    client, name="Test User", email="test@example.com", password="password123"
+    client,
+    name="Test User",
+    email="test@example.com",
+    password="password123",
+    location=None,
+    is_teacher=False,
 ):
-    # Registrar usuario
-    client.post(
-        "/api/v1/register",
-        json={
-            "name": name,
-            "email": email,
-            "password": password,
-            "location": "Test Location",
-        },
-    )
+    # Register user with all fields
+    register_data = {
+        "name": name,
+        "email": email,
+        "password": password,
+        "location": location,
+        "is_teacher": is_teacher,
+    }
+    # Remove None values
+    register_data = {k: v for k, v in register_data.items() if v is not None}
 
-    # Login y obtener token
+    client.post("/api/v1/register", json=register_data)
+
+    # Login and get token
     response = client.post(
         "/api/v1/token",
         data={"username": email, "password": password},
@@ -202,3 +209,27 @@ def test_unauthorized_access(client, setup_test_db):
 
         assert response.status_code == 401
         assert "Not authenticated" in response.json()["detail"]
+
+
+def test_read_users_me(client, setup_test_db):
+    # Register and login with a user that has location and is_teacher set
+    token = register_and_login_user(
+        client,
+        name="Test Teacher",
+        email="teacher@example.com",
+        password="password123",
+        location="Buenos Aires",
+        is_teacher=True,
+    )
+
+    # Get current user info
+    response = client.get(
+        "/api/v1/users/me/", headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response.status_code == 200
+    user = response.json()
+    assert user["email"] == "teacher@example.com"
+    assert user["name"] == "Test Teacher"
+    assert user["location"] == "Buenos Aires"
+    assert user["is_teacher"] is True

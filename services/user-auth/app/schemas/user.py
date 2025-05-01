@@ -89,8 +89,11 @@ class ServiceLogin(BaseModel):
 
 
 class CurrentUser(BaseModel):
+    id: int
     email: EmailStr
     name: str
+    is_teacher: bool = False
+    location: str | None = None
 
 
 class UserInDB(CurrentUser):
