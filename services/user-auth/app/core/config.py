@@ -21,9 +21,9 @@ class Settings(BaseSettings):
     DB_HOST: str
     DB_PORT: int
     DB_NAME: str
-    SERVICE_USERNAME: str = "admin"
-    SERVICE_PASSWORD: str = "admin"
-    SERVICE_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    SERVICE_USERNAME: str
+    SERVICE_PASSWORD: str 
+    SERVICE_ACCESS_TOKEN_EXPIRE_MINUTES: int 
     PGSSLMODE: str = "require"
 
     @property
