@@ -21,8 +21,8 @@ class Settings(BaseSettings):
     DB_HOST: str
     DB_PORT: int
     DB_NAME: str
-    SERVICE_USERNAME: str
-    SERVICE_PASSWORD: str
+    SERVICE_USERNAME: str = "admin"
+    SERVICE_PASSWORD: str = "admin"
     PGSSLMODE: str = "require"
 
     @property
