@@ -6,8 +6,8 @@ from app.services.user_service import (
     edit_user,
     remove_user,
 )
-from app.services.auth_service import login_user
-from app.schemas.user import UserCreate, UserLogin, UserUpdate
+from app.services.auth_service import login_user, login_service
+from app.schemas.user import UserCreate, UserLogin, UserUpdate, ServiceLogin
 
 
 def handle_register_user(db: Session, user: UserCreate):
@@ -32,3 +32,7 @@ def handle_edit_user(db: Session, user_id: int, user_data: UserUpdate):
 
 def handle_delete_user(db: Session, user_id: int):
     return remove_user(db, user_id)
+
+
+def handle_service_login(user: ServiceLogin):
+    return login_service(user)

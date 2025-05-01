@@ -83,6 +83,11 @@ class UserLogin(BaseModel):
         return v
 
 
+class ServiceLogin(BaseModel):
+    user: str
+    password: str
+
+
 class CurrentUser(BaseModel):
     email: EmailStr
     name: str

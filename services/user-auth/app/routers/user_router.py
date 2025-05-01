@@ -1,7 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
-from app.schemas.user import UserCreate, UserLogin, Token, CurrentUser, User, UserUpdate
+from app.schemas.user import (
+    UserCreate,
+    UserLogin,
+    ServiceLogin,
+    CurrentUser,
+    User,
+    UserUpdate,
+)
 from app.controllers.user_controller import (
     handle_register_user,
     handle_login_user,
@@ -9,8 +16,9 @@ from app.controllers.user_controller import (
     handle_get_user,
     handle_edit_user,
     handle_delete_user,
+    handle_service_login,
 )
-from app.core.security import get_current_active_user
+from app.core.security import get_current_active_user, get_current_active_service
 from app.db.dependencies import get_db
 from typing import Annotated, List
 from fastapi.security import OAuth2PasswordRequestForm
@@ -167,6 +175,28 @@ async def login_for_access_token(
         )
 
 
+@router.post("/token/service")
+async def login_for_access_service_token(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+):
+    try:
+        logging.info(f"Intento de login para servicio: {form_data.username}")
+        credentials = ServiceLogin(user=form_data.username, password=form_data.password)
+        return handle_service_login(credentials)
+
+    except HTTPException as e:
+        raise e
+
+    except Exception as e:
+        logging.error(f"Exception no manejada en service login: {str(e)}")
+        logging.error(traceback.format_exc())
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor",
+        )
+
+
 @router.get("/users/me/", response_model=CurrentUser)
 async def read_users_me(
     current_user: Annotated[CurrentUser, Depends(get_current_active_user)],
@@ -180,4 +210,61 @@ async def read_users_me(
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Error interno del servidor: {str(e)}"
+        )
+
+
+@router.get("/service/me/")
+async def read_service(
+    current_service: Annotated[CurrentUser, Depends(get_current_active_service)],
+):
+    try:
+        return current_service
+
+    except HTTPException as e:
+        raise e
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error interno del servidor: {str(e)}"
+        )
+
+
+@router.get("/service/user/{user_id}", response_model=User)
+async def get_user_as_service(
+    user_id: int,
+    current_service: Annotated[str, Depends(get_current_active_service)],
+    db: Session = Depends(get_db),
+):
+    """
+    Obtener información de un usuario específico por ID.
+    Requiere autenticación de servicio.
+    """
+    try:
+        return handle_get_user(db, user_id)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error interno del servidor: {str(e)}",
+        )
+
+
+@router.get("/service/users", response_model=List[User])
+async def get_users_as_service(
+    current_service: Annotated[str, Depends(get_current_active_service)],
+    db: Session = Depends(get_db),
+):
+    """
+    Obtener lista de todos los usuarios.
+    Requiere autenticación de servicio.
+    """
+    try:
+        return handle_get_users(db)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error interno del servidor: {str(e)}",
         )
