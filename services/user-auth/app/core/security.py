@@ -30,7 +30,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 def get_user(db, email: str):
     user = get_user_by_email(db, email=email)
     if user:
-        return UserInDB(**user.__dict__)
+        return user
     return None
 
 
