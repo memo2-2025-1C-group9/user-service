@@ -22,8 +22,8 @@ class Settings(BaseSettings):
     DB_PORT: int
     DB_NAME: str
     SERVICE_USERNAME: str
-    SERVICE_PASSWORD: str 
-    SERVICE_ACCESS_TOKEN_EXPIRE_MINUTES: int 
+    SERVICE_PASSWORD: str
+    SERVICE_ACCESS_TOKEN_EXPIRE_MINUTES: int
     PGSSLMODE: str = "require"
 
     @property
