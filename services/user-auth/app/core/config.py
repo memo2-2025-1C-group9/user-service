@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     DB_NAME: str
     SERVICE_USERNAME: str
     SERVICE_PASSWORD: str
+    SERVICE_ACCESS_TOKEN_EXPIRE_MINUTES: int
     PGSSLMODE: str = "require"
 
     @property
@@ -45,6 +46,8 @@ try:
     logger.debug(f"DB_HOST: {settings.DB_HOST}")
     logger.debug(f"DB_PORT: {settings.DB_PORT}")
     logger.debug(f"DATABASE_URL: {settings.DATABASE_URL}")
+    logger.debug(f"SERVICE_USERNAME: {settings.SERVICE_USERNAME}")
+    logger.debug(f"SERVICE_PASSWORD: {settings.SERVICE_PASSWORD}")
 except Exception as e:
     logger.error(f"Error al cargar la configuración: {str(e)}")
     raise
