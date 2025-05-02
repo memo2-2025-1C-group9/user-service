@@ -223,9 +223,7 @@ def test_read_users_me(client, setup_test_db):
     )
 
     # Get current user info
-    response = client.get(
-        "/api/v1/users/me/", headers={"Authorization": f"Bearer {token}"}
-    )
+    response = client.get("/api/v1/me/", headers={"Authorization": f"Bearer {token}"})
 
     assert response.status_code == 200
     user = response.json()

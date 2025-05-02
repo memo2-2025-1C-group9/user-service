@@ -148,7 +148,12 @@ def login_user(db: Session, credentials: UserLogin):
                 minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
             )
             access_token = create_access_token(
-                data={"sub": user.email}, expires_delta=access_token_expires
+                data={
+                    "sub": user.email,
+                    "scopes": ["user"],
+                    "role": "user",
+                },
+                expires_delta=access_token_expires,
             )
             return Token(access_token=access_token, token_type="bearer")
         except Exception as e:
@@ -190,7 +195,12 @@ def login_service(credentials: ServiceLogin):
                 minutes=settings.SERVICE_ACCESS_TOKEN_EXPIRE_MINUTES
             )
             access_token = create_access_token(
-                data={"service": credentials.user}, expires_delta=access_token_expires
+                data={
+                    "sub": credentials.user,
+                    "scopes": ["service"],
+                    "role": "service",
+                },
+                expires_delta=access_token_expires,
             )
             return Token(access_token=access_token, token_type="bearer")
     except HTTPException as e:
