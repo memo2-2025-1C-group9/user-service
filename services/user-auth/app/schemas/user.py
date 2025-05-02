@@ -39,6 +39,7 @@ class UserUpdate(BaseModel):
     location: str | None = None
     is_teacher: bool | None = None
     academic_level: int | None = None
+    is_blocked: bool | None = None
 
     @field_validator("name")
     @classmethod
