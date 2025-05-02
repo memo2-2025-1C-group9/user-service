@@ -134,7 +134,6 @@ async def generic_exception_handler(request: Request, exc: Exception):
 @app.get("/health")
 async def health_check():
     try:
-
         with engine.connect() as connection:
             connection.execute(text("SELECT 1"))
         return {"status": "healthy", "database": "connected"}

@@ -38,6 +38,9 @@ class Settings(BaseSettings):
     LOCK_TIME_LOGIN_WINDOW: int
     LOCK_USER_TIME: int
 
+    DATADOG_API_KEY: str
+    DATADOG_URL: str
+
 
 try:
     settings = Settings()

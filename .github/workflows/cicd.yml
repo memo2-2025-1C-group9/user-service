@@ -85,6 +85,8 @@ jobs:
           SERVICE_USERNAME: ${{ secrets.SERVICE_USERNAME }}
           SERVICE_PASSWORD: ${{ secrets.SERVICE_PASSWORD }}
           SERVICE_ACCESS_TOKEN_EXPIRE_MINUTES: ${{ secrets.SERVICE_ACCESS_TOKEN_EXPIRE_MINUTES }}
+          DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY }}
+          DATADOG_URL: ${{ secrets.DATADOG_URL }}
         run: |
           cd $GITHUB_WORKSPACE/services/user-auth
           docker-compose --profile app up -d
@@ -134,6 +136,8 @@ jobs:
           MAX_FAILED_LOGIN_ATTEMPTS: 5
           LOCK_TIME_LOGIN_WINDOW: 15
           LOCK_USER_TIME: 30
+          DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY }}
+          DATADOG_URL: ${{ secrets.DATADOG_URL }}
         run: |
           cd services/user-auth
           PYTHONPATH=. pytest --cov=app --cov=tests --cov-report=term-missing --cov-report=xml --cov-report=html
