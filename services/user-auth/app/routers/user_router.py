@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Security, status
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
 from app.schemas.user import (
+    Identity,
     UserCreate,
     UserLogin,
     ServiceLogin,
-    CurrentUser,
     User,
     UserUpdate,
 )
@@ -18,7 +18,7 @@ from app.controllers.user_controller import (
     handle_delete_user,
     handle_service_login,
 )
-from app.core.security import get_current_active_user, get_current_active_service
+from app.core.security import get_current_identity
 from app.db.dependencies import get_db
 from typing import Annotated, List
 from fastapi.security import OAuth2PasswordRequestForm
@@ -57,7 +57,9 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
 
 @router.get("/users", response_model=List[User])
 async def get_users(
-    current_user: Annotated[CurrentUser, Depends(get_current_active_user)],
+    identity: Annotated[
+        Identity, Security(get_current_identity, scopes=["user", "service"])
+    ],
     db: Session = Depends(get_db),
 ):
     """
@@ -78,7 +80,9 @@ async def get_users(
 @router.get("/user/{user_id}", response_model=User)
 async def get_user(
     user_id: int,
-    current_user: Annotated[CurrentUser, Depends(get_current_active_user)],
+    identity: Annotated[
+        Identity, Security(get_current_identity, scopes=["user", "service"])
+    ],
     db: Session = Depends(get_db),
 ):
     """
@@ -100,7 +104,9 @@ async def get_user(
 async def edit_user(
     user_id: int,
     user_data: UserUpdate,
-    current_user: Annotated[CurrentUser, Depends(get_current_active_user)],
+    identity: Annotated[
+        Identity, Security(get_current_identity, scopes=["user", "service"])
+    ],
     db: Session = Depends(get_db),
 ):
     """
@@ -121,7 +127,9 @@ async def edit_user(
 @router.delete("/deleteuser/{user_id}", response_model=User)
 async def delete_user(
     user_id: int,
-    current_user: Annotated[CurrentUser, Depends(get_current_active_user)],
+    identity: Annotated[
+        Identity, Security(get_current_identity, scopes=["user", "service"])
+    ],
     db: Session = Depends(get_db),
 ):
     """
@@ -197,12 +205,14 @@ async def login_for_access_service_token(
         )
 
 
-@router.get("/users/me/", response_model=CurrentUser)
+@router.get("/me/")
 async def read_users_me(
-    current_user: Annotated[CurrentUser, Depends(get_current_active_user)],
+    identity: Annotated[
+        Identity, Security(get_current_identity, scopes=["user", "service"])
+    ],
 ):
     try:
-        return current_user
+        return identity.identity
 
     except HTTPException as e:
         raise e
@@ -210,61 +220,4 @@ async def read_users_me(
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Error interno del servidor: {str(e)}"
-        )
-
-
-@router.get("/service/me/")
-async def read_service(
-    current_service: Annotated[CurrentUser, Depends(get_current_active_service)],
-):
-    try:
-        return current_service
-
-    except HTTPException as e:
-        raise e
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error interno del servidor: {str(e)}"
-        )
-
-
-@router.get("/service/user/{user_id}", response_model=User)
-async def get_user_as_service(
-    user_id: int,
-    current_service: Annotated[str, Depends(get_current_active_service)],
-    db: Session = Depends(get_db),
-):
-    """
-    Obtener información de un usuario específico por ID.
-    Requiere autenticación de servicio.
-    """
-    try:
-        return handle_get_user(db, user_id)
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error interno del servidor: {str(e)}",
-        )
-
-
-@router.get("/service/users", response_model=List[User])
-async def get_users_as_service(
-    current_service: Annotated[str, Depends(get_current_active_service)],
-    db: Session = Depends(get_db),
-):
-    """
-    Obtener lista de todos los usuarios.
-    Requiere autenticación de servicio.
-    """
-    try:
-        return handle_get_users(db)
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error interno del servidor: {str(e)}",
         )

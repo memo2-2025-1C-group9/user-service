@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - auth-scopes
   pull_request:
     branches:
       - main

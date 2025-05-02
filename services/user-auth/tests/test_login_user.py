@@ -158,7 +158,7 @@ def test_protected_route_with_valid_token(client, setup_test_db):
     token = data["access_token"]
 
     response = client.get(
-        "/api/v1/users/me/",
+        "/api/v1/me/",
         headers={"Authorization": f"Bearer {token}"},
     )
 
@@ -181,7 +181,7 @@ def test_session_expired(client, setup_test_db):
     token = generate_expired_token(email="john@example.com")
 
     response = client.get(
-        "/api/v1/users/me/",
+        "/api/v1/me/",
         headers={"Authorization": f"Bearer {token}"},
     )
     expect_error_response(response, 401)
@@ -239,14 +239,13 @@ def test_login_with_service_account(client, setup_test_db):
     token = data["access_token"]
 
     response_me = client.get(
-        "/api/v1/service/me/", headers={"Authorization": f"Bearer {token}"}
+        "/api/v1/me/", headers={"Authorization": f"Bearer {token}"}
     )
 
     assert response_me.status_code == 200
-    print(response_me)
-    print(response_me.json())
     me_data = response_me.json()
-    assert me_data == settings.SERVICE_USERNAME
+    me_name = me_data["name"]
+    assert me_name == settings.SERVICE_USERNAME
 
 
 def test_login_fail_with_service_account(client, setup_test_db):
