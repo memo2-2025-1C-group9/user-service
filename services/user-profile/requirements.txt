@@ -1,6 +1,8 @@
 fastapi
 uvicorn
 pydantic
+pydantic[email]
+pydantic-settings
 python-dotenv
 pytest
 httpx

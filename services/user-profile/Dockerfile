@@ -7,13 +7,11 @@ WORKDIR /app
 # Copy the current directory contents into the container
 COPY . /app
 
-# Install dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Make entrypoint.sh executable
+RUN chmod +x /app/entrypoint.sh
 
-# Copy script entrypoint into the container
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Expose the port that FastAPI will run on
 EXPOSE $PORT
@@ -23,6 +21,8 @@ EXPOSE $PORT
 
 # Establecer la variable de entorno PYTHONPATH para que pytest encuentre el módulo app
 ENV PYTHONPATH=/app
+ENV HOST=0.0.0.0
+ENV PORT=8080
 
 # Ejecutar el script de entrada cuando el contenedor se inicie
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/app/entrypoint.sh", "app"]
