@@ -14,7 +14,9 @@ from app.schemas.user import UserCreate, UserUpdate
 def register_user(db: Session, user: UserCreate):
     try:
         send_metric("user_service.register_attempt")
-        return create_user(db, user)
+        user = create_user(db, user)
+        send_metric("user_service.register_success")
+        return user
     except HTTPException:
         send_metric("user_service.register_error")
         raise
@@ -27,7 +29,9 @@ def register_user(db: Session, user: UserCreate):
 def get_users(db: Session):
     try:
         send_metric("user_service.get_users_attempt")
-        return get_all_users(db)
+        users = get_all_users(db)
+        send_metric("user_service.get_users_success")
+        return users
     except Exception as e:
         send_metric("user_service.get_users_error")
         raise HTTPException(
@@ -41,6 +45,7 @@ def get_user(db: Session, user_id: int):
         user = get_user_by_id(db, user_id)
         if not user:
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        send_metric("user_service.get_user_success")
         return user
     except HTTPException:
         send_metric("user_service.get_user_error")
@@ -55,7 +60,9 @@ def get_user(db: Session, user_id: int):
 def edit_user(db: Session, user_id: int, user_data: UserUpdate):
     try:
         send_metric("user_service.edit_user_attempt")
-        return update_user(db, user_id, user_data)
+        user = update_user(db, user_id, user_data)
+        send_metric("user_service.edit_user_success")
+        return user
     except HTTPException:
         send_metric("user_service.edit_user_error")
         raise
@@ -70,7 +77,9 @@ def edit_user(db: Session, user_id: int, user_data: UserUpdate):
 def remove_user(db: Session, user_id: int):
     try:
         send_metric("user_service.remove_user_attempt")
-        return delete_user(db, user_id)
+        user = delete_user(db, user_id)
+        send_metric("user_service.remove_user_success")
+        return user
     except HTTPException:
         send_metric("user_service.remove_user_error")
         raise
