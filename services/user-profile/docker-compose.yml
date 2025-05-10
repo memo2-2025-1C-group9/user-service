@@ -13,18 +13,11 @@ services:
     build: .
     command: ["/app/entrypoint.sh", "app"]
     environment:
-      - DD_AGENT_HOST=datadog-agent
       - DD_SERVICE=app
       - DD_ENV=${ENVIRONMENT}
-    networks:
-      - datadog-agent-monitoring
     profiles:
       - app  
     ports:
       - "8080:8080"
     volumes:
       - .:/app
-
-networks:
-  datadog-agent-monitoring:
-    external: true
