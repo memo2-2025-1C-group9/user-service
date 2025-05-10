@@ -8,6 +8,8 @@ services:
       - .:/app
     profiles:
       - test
+    env_file:
+      - .env.development
 
   user-profile:
     build: .
@@ -21,3 +23,5 @@ services:
       - "8080:8080"
     volumes:
       - .:/app
+    env_file:
+      - .env.development
