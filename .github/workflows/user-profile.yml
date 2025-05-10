@@ -1,10 +1,15 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline - user-profile
 
 on:
   push:
+    path: 
+      - 'services/user-profile/**'
     branches:
       - main
+      - user-profile
   pull_request:
+    path: 
+      - 'services/user-profile/**'
     branches:
       - main
   merge_group:
@@ -33,7 +38,7 @@ jobs:
 
       - name: Run black
         run: |
-          cd services/user-auth
+          cd services/user-profile
           black --check app tests
 
   test:
@@ -53,48 +58,32 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y docker-compose
 
-      - name: Create Docker network
-        run: docker network create datadog-agent-monitoring
-
       - name: Copy environment variables
         run: |
-          echo "ENVIRONMENT=test" > $GITHUB_WORKSPACE/services/user-auth/.env.development
-          echo "HOST=0.0.0.0" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
-          echo "PORT=8000" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
+          echo "SERVICE_USERNAME=service" >> $GITHUB_WORKSPACE/services/user-profile/.env.development
+          echo "SERVICE_PASSWORD=service_password123" >> $GITHUB_WORKSPACE/services/user-profile/.env.development
+          
+          echo "HOST=0.0.0.0" >> $GITHUB_WORKSPACE/services/user-profile/.env.development
+          echo "PORT=8000" >> $GITHUB_WORKSPACE/services/user-profile/.env.development
+          echo "ENVIRONMENT=test" > $GITHUB_WORKSPACE/services/user-profile/.env.development
 
-          echo "SECRET_KEY=supersecret" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
-          echo "ALGORITHM=HS256" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
-          echo "ACCESS_TOKEN_EXPIRE_MINUTES=30" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
-
-          echo "MAX_FAILED_LOGIN_ATTEMPTS=5" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
-          echo "LOCK_TIME_LOGIN_WINDOW=15" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
-          echo "LOCK_USER_TIME=30" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
-
-          echo "SERVICE_USERNAME=service" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
-          echo "SERVICE_PASSWORD=service_password123" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
-          echo "SERVICE_ACCESS_TOKEN_EXPIRE_MINUTES=60" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
+          echo "AUTH_SERVICE_URL=fake-url" > $GITHUB_WORKSPACE/services/user-profile/.env.development
 
       - name: Start Docker services
         env:
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DATABASE_URL: postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.DB_NAME }}?sslmode=require
           SERVICE_USERNAME: ${{ secrets.SERVICE_USERNAME }}
           SERVICE_PASSWORD: ${{ secrets.SERVICE_PASSWORD }}
-          SERVICE_ACCESS_TOKEN_EXPIRE_MINUTES: ${{ secrets.SERVICE_ACCESS_TOKEN_EXPIRE_MINUTES }}
-          DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY }}
-          DATADOG_URL: ${{ secrets.DATADOG_URL }}
+
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
         run: |
-          cd $GITHUB_WORKSPACE/services/user-auth
+          cd $GITHUB_WORKSPACE/services/user-profile
           docker-compose --profile app up -d
           docker-compose logs -f &
 
       - name: Wait for API to be ready
         run: |
-          cd $GITHUB_WORKSPACE/services/user-auth
+          cd $GITHUB_WORKSPACE/services/user-profile
           for i in {1..30}; do
             if curl -s http://localhost:8000/health; then
               echo "API is ready"
@@ -111,42 +100,30 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd services/user-auth
+          cd services/user-profile
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest pytest-cov
 
       - name: Run tests with coverage
         env:
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_NAME: ${{ secrets.DB_NAME }}
           SERVICE_USERNAME: ${{ secrets.SERVICE_USERNAME }}
           SERVICE_PASSWORD: ${{ secrets.SERVICE_PASSWORD }}
-          SERVICE_ACCESS_TOKEN_EXPIRE_MINUTES: ${{ secrets.SERVICE_ACCESS_TOKEN_EXPIRE_MINUTES }}
-          DATABASE_URL: postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.DB_NAME }}?sslmode=require
+          
           ENVIRONMENT: test
           HOST: localhost
           PORT: 8000
-          SECRET_KEY: supersecret
-          ALGORITHM: HS256
-          ACCESS_TOKEN_EXPIRE_MINUTES: 30
-          MAX_FAILED_LOGIN_ATTEMPTS: 5
-          LOCK_TIME_LOGIN_WINDOW: 15
-          LOCK_USER_TIME: 30
-          DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY }}
-          DATADOG_URL: ${{ secrets.DATADOG_URL }}
+          
+          AUTH_SERVICE_URL: fake-url
         run: |
-          cd services/user-auth
+          cd services/user-profile
           PYTHONPATH=. pytest --cov=app --cov=tests --cov-report=term-missing --cov-report=xml --cov-report=html
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: services/user-auth/htmlcov/
+          path: services/user-profile/htmlcov/
           retention-days: 1
 
       - name: Upload coverage to Codecov
@@ -158,7 +135,7 @@ jobs:
 
       - name: Stop Docker services
         run: |
-          cd $GITHUB_WORKSPACE/services/user-auth
+          cd $GITHUB_WORKSPACE/services/user-profile
           docker-compose down
 
   deploy-coverage:
@@ -172,7 +149,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: coverage-report
-          path: services/user-auth/htmlcov
+          path: services/user-profile/htmlcov
 
       - name: Checkout GitHub Pages
         uses: actions/checkout@v4
@@ -183,8 +160,8 @@ jobs:
 
       - name: Update coverage report
         run: |
-          mkdir -p pages/coverages/user-auth
-          cp -r services/user-auth/htmlcov/* pages/coverages/user-auth/
+          mkdir -p pages/coverages/user-profile
+          cp -r services/user-profile/htmlcov/* pages/coverages/user-profile/
 
       - name: Commit and push changes
         working-directory: pages
@@ -192,7 +169,7 @@ jobs:
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git add .
-          git commit -m "Update coverage report for user-auth service"
+          git commit -m "Update coverage report for user-profile service"
           git push
 
 #  deploy-render:

@@ -1,0 +1,219 @@
+name: CI/CD Pipeline - user-auth
+
+on:
+  push:
+    path: 
+      - 'services/user-auth/**'
+    branches:
+      - main
+      - user-profile
+  pull_request:
+    path: 
+      - 'services/user-auth/**'
+    branches:
+      - main
+  merge_group:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install black
+
+      - name: Run black
+        run: |
+          cd services/user-auth
+          black --check app tests
+
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      - name: Copy environment variables
+        run: |
+          echo "ENVIRONMENT=test" > $GITHUB_WORKSPACE/services/user-auth/.env.development
+          echo "HOST=0.0.0.0" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
+          echo "PORT=8000" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
+
+          echo "SECRET_KEY=supersecret" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
+          echo "ALGORITHM=HS256" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
+          echo "ACCESS_TOKEN_EXPIRE_MINUTES=30" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
+
+          echo "MAX_FAILED_LOGIN_ATTEMPTS=5" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
+          echo "LOCK_TIME_LOGIN_WINDOW=15" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
+          echo "LOCK_USER_TIME=30" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
+
+          echo "SERVICE_USERNAME=service" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
+          echo "SERVICE_PASSWORD=service_password123" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
+          echo "SERVICE_ACCESS_TOKEN_EXPIRE_MINUTES=60" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
+
+      - name: Start Docker services
+        env:
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DATABASE_URL: postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.DB_NAME }}?sslmode=require
+          SERVICE_USERNAME: ${{ secrets.SERVICE_USERNAME }}
+          SERVICE_PASSWORD: ${{ secrets.SERVICE_PASSWORD }}
+          SERVICE_ACCESS_TOKEN_EXPIRE_MINUTES: ${{ secrets.SERVICE_ACCESS_TOKEN_EXPIRE_MINUTES }}
+          DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY }}
+          DATADOG_URL: ${{ secrets.DATADOG_URL }}
+        run: |
+          cd $GITHUB_WORKSPACE/services/user-auth
+          docker-compose --profile app up -d
+          docker-compose logs -f &
+
+      - name: Wait for API to be ready
+        run: |
+          cd $GITHUB_WORKSPACE/services/user-auth
+          for i in {1..30}; do
+            if curl -s http://localhost:8000/health; then
+              echo "API is ready"
+              exit 0
+            fi
+            echo "Waiting for API... Attempt $i/30"
+            docker-compose logs
+            sleep 5
+          done
+          echo "API failed to start"
+          docker-compose ps
+          docker-compose logs --tail=100
+          exit 1
+
+      - name: Install dependencies
+        run: |
+          cd services/user-auth
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+
+      - name: Run tests with coverage
+        env:
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          SERVICE_USERNAME: ${{ secrets.SERVICE_USERNAME }}
+          SERVICE_PASSWORD: ${{ secrets.SERVICE_PASSWORD }}
+          SERVICE_ACCESS_TOKEN_EXPIRE_MINUTES: ${{ secrets.SERVICE_ACCESS_TOKEN_EXPIRE_MINUTES }}
+          DATABASE_URL: postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.DB_NAME }}?sslmode=require
+          ENVIRONMENT: test
+          HOST: localhost
+          PORT: 8000
+          SECRET_KEY: supersecret
+          ALGORITHM: HS256
+          ACCESS_TOKEN_EXPIRE_MINUTES: 30
+          MAX_FAILED_LOGIN_ATTEMPTS: 5
+          LOCK_TIME_LOGIN_WINDOW: 15
+          LOCK_USER_TIME: 30
+          DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY }}
+          DATADOG_URL: ${{ secrets.DATADOG_URL }}
+        run: |
+          cd services/user-auth
+          PYTHONPATH=. pytest --cov=app --cov=tests --cov-report=term-missing --cov-report=xml --cov-report=html
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: services/user-auth/htmlcov/
+          retention-days: 1
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          verbose: true
+
+      - name: Stop Docker services
+        run: |
+          cd $GITHUB_WORKSPACE/services/user-auth
+          docker-compose down
+
+  deploy-coverage:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download coverage report
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: services/user-auth/htmlcov
+
+      - name: Checkout GitHub Pages
+        uses: actions/checkout@v4
+        with:
+          repository: memo2-2025-1c-group9/memo2-2025-1c-group9.github.io
+          token: ${{ secrets.GH_PAT }}
+          path: pages
+
+      - name: Update coverage report
+        run: |
+          mkdir -p pages/coverages/user-auth
+          cp -r services/user-auth/htmlcov/* pages/coverages/user-auth/
+
+      - name: Commit and push changes
+        working-directory: pages
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add .
+          git commit -m "Update coverage report for user-auth service"
+          git push
+
+#  deploy-render:
+#    runs-on: ubuntu-latest
+#    needs: [test, deploy-coverage]
+#    if: github.ref == 'refs/heads/main'
+#    permissions:
+#      deployments: write
+#    steps:
+#      - name: Checkout repository
+#        uses: actions/checkout@v4
+#
+#      - name: Deploy to Render
+#        uses: JorgeLNJunior/render-deploy@v1.4.5
+#        with:
+#          service_id: ${{ secrets.RENDER_SERVICE_ID }}
+#          api_key: ${{ secrets.RENDER_API_KEY }}
+#          clear_cache: true
+#          wait_deploy: true
+#          github_deployment: true
+#          deployment_environment: 'production'
+#          github_token: ${{ secrets.GH_PAT }}
