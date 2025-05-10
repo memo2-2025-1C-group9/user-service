@@ -65,9 +65,9 @@ jobs:
           
           echo "HOST=0.0.0.0" >> $GITHUB_WORKSPACE/services/user-profile/.env.development
           echo "PORT=8000" >> $GITHUB_WORKSPACE/services/user-profile/.env.development
-          echo "ENVIRONMENT=test" > $GITHUB_WORKSPACE/services/user-profile/.env.development
+          echo "ENVIRONMENT=test" >> $GITHUB_WORKSPACE/services/user-profile/.env.development
 
-          echo "AUTH_SERVICE_URL=fake-url" > $GITHUB_WORKSPACE/services/user-profile/.env.development
+          echo "AUTH_SERVICE_URL=fake-url" >> $GITHUB_WORKSPACE/services/user-profile/.env.development
 
       - name: Start Docker services
         env:
