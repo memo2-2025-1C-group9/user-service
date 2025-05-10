@@ -1,7 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Security, status
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
-from app.schemas.user import UserCreate, UserLogin, Token, CurrentUser, User, UserUpdate
+from app.schemas.user import (
+    Identity,
+    UserCreate,
+    UserLogin,
+    ServiceLogin,
+    User,
+    UserUpdate,
+)
 from app.controllers.user_controller import (
     handle_register_user,
     handle_login_user,
@@ -9,8 +16,9 @@ from app.controllers.user_controller import (
     handle_get_user,
     handle_edit_user,
     handle_delete_user,
+    handle_service_login,
 )
-from app.core.security import get_current_active_user
+from app.core.security import get_current_identity
 from app.db.dependencies import get_db
 from typing import Annotated, List
 from fastapi.security import OAuth2PasswordRequestForm
@@ -49,7 +57,9 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
 
 @router.get("/users", response_model=List[User])
 async def get_users(
-    current_user: Annotated[CurrentUser, Depends(get_current_active_user)],
+    identity: Annotated[
+        Identity, Security(get_current_identity, scopes=["user", "service"])
+    ],
     db: Session = Depends(get_db),
 ):
     """
@@ -70,7 +80,9 @@ async def get_users(
 @router.get("/user/{user_id}", response_model=User)
 async def get_user(
     user_id: int,
-    current_user: Annotated[CurrentUser, Depends(get_current_active_user)],
+    identity: Annotated[
+        Identity, Security(get_current_identity, scopes=["user", "service"])
+    ],
     db: Session = Depends(get_db),
 ):
     """
@@ -92,7 +104,9 @@ async def get_user(
 async def edit_user(
     user_id: int,
     user_data: UserUpdate,
-    current_user: Annotated[CurrentUser, Depends(get_current_active_user)],
+    identity: Annotated[
+        Identity, Security(get_current_identity, scopes=["user", "service"])
+    ],
     db: Session = Depends(get_db),
 ):
     """
@@ -113,7 +127,9 @@ async def edit_user(
 @router.delete("/deleteuser/{user_id}", response_model=User)
 async def delete_user(
     user_id: int,
-    current_user: Annotated[CurrentUser, Depends(get_current_active_user)],
+    identity: Annotated[
+        Identity, Security(get_current_identity, scopes=["user", "service"])
+    ],
     db: Session = Depends(get_db),
 ):
     """
@@ -167,12 +183,36 @@ async def login_for_access_token(
         )
 
 
-@router.get("/users/me/", response_model=CurrentUser)
-async def read_users_me(
-    current_user: Annotated[CurrentUser, Depends(get_current_active_user)],
+@router.post("/token/service")
+async def login_for_access_service_token(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ):
     try:
-        return current_user
+        logging.info(f"Intento de login para servicio: {form_data.username}")
+        credentials = ServiceLogin(user=form_data.username, password=form_data.password)
+        return handle_service_login(credentials)
+
+    except HTTPException as e:
+        raise e
+
+    except Exception as e:
+        logging.error(f"Exception no manejada en service login: {str(e)}")
+        logging.error(traceback.format_exc())
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor",
+        )
+
+
+@router.get("/me/")
+async def read_users_me(
+    identity: Annotated[
+        Identity, Security(get_current_identity, scopes=["user", "service"])
+    ],
+):
+    try:
+        return identity.identity
 
     except HTTPException as e:
         raise e

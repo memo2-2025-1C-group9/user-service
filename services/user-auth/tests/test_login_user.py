@@ -19,7 +19,8 @@ logging.getLogger("fastapi").setLevel(logging.WARNING)
 
 # Usar la URL de la base de datos de la variable de entorno si está disponible, o db como fallback
 TEST_DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql://user:password@db:5432/student_management"
+    "DATABASE_URL",
+    f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}?sslmode=require",
 )
 engine = create_engine(TEST_DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -157,7 +158,7 @@ def test_protected_route_with_valid_token(client, setup_test_db):
     token = data["access_token"]
 
     response = client.get(
-        "/api/v1/users/me/",
+        "/api/v1/me/",
         headers={"Authorization": f"Bearer {token}"},
     )
 
@@ -180,7 +181,7 @@ def test_session_expired(client, setup_test_db):
     token = generate_expired_token(email="john@example.com")
 
     response = client.get(
-        "/api/v1/users/me/",
+        "/api/v1/me/",
         headers={"Authorization": f"Bearer {token}"},
     )
     expect_error_response(response, 401)
@@ -220,3 +221,39 @@ def test_account_locks_after_failed_attempts(client, setup_test_db):
     # Luego, intenta iniciar sesión nuevamente, debería bloquearse
     response = login_user(client, password="wrongpassword")
     expect_error_response(response, 403)
+
+
+def test_login_with_service_account(client, setup_test_db):
+    # Iniciar sesión con una cuenta de servicio
+    response = client.post(
+        "/api/v1/token/service",
+        data={
+            "username": settings.SERVICE_USERNAME,
+            "password": settings.SERVICE_PASSWORD,
+        },
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    token = data["access_token"]
+
+    response_me = client.get(
+        "/api/v1/me/", headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response_me.status_code == 200
+    me_data = response_me.json()
+    me_name = me_data["name"]
+    assert me_name == settings.SERVICE_USERNAME
+
+
+def test_login_fail_with_service_account(client, setup_test_db):
+    # Intento de iniciar sesión con una cuenta de servicio con credenciales incorrectas
+    response = client.post(
+        "/api/v1/token/service",
+        data={"username": "wronguser", "password": "wrongpassword"},
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
+
+    expect_error_response(response, 401)

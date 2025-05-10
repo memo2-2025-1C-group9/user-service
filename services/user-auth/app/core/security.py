@@ -1,17 +1,25 @@
 import jwt
 from typing import Annotated
 from datetime import datetime, timedelta, timezone
-from app.schemas.user import UserInDB, TokenData, CurrentUser
+
+from pydantic import ValidationError
+from app.schemas.user import CurrentService, Identity, UserInDB, TokenData, CurrentUser
 from app.core.config import settings
 from sqlalchemy.orm import Session
 from fastapi import Depends, HTTPException, status
 from jwt.exceptions import InvalidTokenError
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from app.db.dependencies import get_db
 from app.repositories.user_repository import get_user_by_email
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="token",
+    scopes={
+        "user": "Acceso como usuario registrado (alumno o docente)",
+        "service": "Acceso completo como servicio",
+    },
+)
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
@@ -42,28 +50,51 @@ def create_credentials_exception():
     )
 
 
-async def get_current_user(
+async def get_current_identity(
+    security_scopes: SecurityScopes,
     token: Annotated[str, Depends(oauth2_scheme)],
     db: Session = Depends(get_db),
 ):
+    if security_scopes.scopes:
+        authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
+    else:
+        authenticate_value = "Bearer"
+
     try:
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
-        email = payload.get("sub")
-        if email is None:
+
+        username = payload.get("sub")
+        if username is None:
             raise create_credentials_exception()
-        token_data = TokenData(email=email)
-    except InvalidTokenError:
+
+        token_scopes = payload.get("scopes", [])
+        token_data = TokenData(scopes=token_scopes, username=username)
+    except (InvalidTokenError, ValidationError):
         raise create_credentials_exception()
 
-    user = get_user(db, email=token_data.email)
+    role = payload.get("role")
+    if role == "service":
+        user = Identity(role=role, identity=CurrentService(name=username))
+    elif role == "user":
+        current_user = get_user(db, email=token_data.username)
+        user = Identity(role=role, identity=CurrentUser(**current_user.__dict__))
+
     if user is None:
         raise create_credentials_exception()
+    for scope in token_data.scopes:
+        if scope not in security_scopes.scopes:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not enough permissions",
+                headers={"WWW-Authenticate": authenticate_value},
+            )
+
     return user
 
 
 async def get_current_active_user(
-    current_user: Annotated[CurrentUser, Depends(get_current_user)],
+    current_user: Annotated[CurrentUser, Depends(get_current_identity)],
 ):
     return current_user

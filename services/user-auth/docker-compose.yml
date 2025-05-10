@@ -10,6 +10,8 @@ services:
       - DB_PORT=${DB_PORT}
       - DB_NAME=${DB_NAME}
       - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=require
+      - DATADOG_API_KEY=${DATADOG_API_KEY}
+      - DATADOG_URL=${DATADOG_URL}
     volumes:
       - .:/app
       - /tmp/render-ca.crt:/tmp/render-ca.crt
@@ -29,9 +31,8 @@ services:
       - DB_PORT=${DB_PORT}
       - DB_NAME=${DB_NAME}
       - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=require
-      - DD_AGENT_HOST=datadog-agent
-      - DD_SERVICE=app
-      - DD_ENV=${ENVIRONMENT}
+      - DATADOG_API_KEY=${DATADOG_API_KEY}
+      - DATADOG_URL=${DATADOG_URL}
     ports:
       - "8000:8000"
     volumes:

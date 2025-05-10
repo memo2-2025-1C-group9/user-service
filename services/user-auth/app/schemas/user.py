@@ -1,4 +1,5 @@
 from pydantic import BaseModel, EmailStr, field_validator, ConfigDict
+from typing import Literal, Union
 from datetime import datetime
 import re
 
@@ -38,6 +39,7 @@ class UserUpdate(BaseModel):
     location: str | None = None
     is_teacher: bool | None = None
     academic_level: int | None = None
+    is_blocked: bool | None = None
 
     @field_validator("name")
     @classmethod
@@ -83,9 +85,17 @@ class UserLogin(BaseModel):
         return v
 
 
+class ServiceLogin(BaseModel):
+    user: str
+    password: str
+
+
 class CurrentUser(BaseModel):
+    id: int
     email: EmailStr
     name: str
+    is_teacher: bool = False
+    location: str | None = None
 
 
 class UserInDB(CurrentUser):
@@ -98,4 +108,14 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    email: str | None = None
+    username: str | None = None
+    scopes: list[str] = []
+
+
+class CurrentService(BaseModel):
+    name: str
+
+
+class Identity(BaseModel):
+    role: Literal["user", "service"]
+    identity: Union[CurrentUser, CurrentService]

@@ -30,6 +30,8 @@ services:
         value: "DEBUG"
       - key: PYTHONUNBUFFERED
         value: "1"
+      - key: SERVICE_ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "60"
     healthCheckPath: /health
     autoDeploy: true
     numInstances: 1
@@ -39,4 +41,4 @@ databases:
     databaseName: db_ioio
     user: admin
     plan: free
-    region: oregon 
+    region: oregon
