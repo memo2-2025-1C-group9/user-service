@@ -7,14 +7,20 @@ from app.routers.user_router import router as user_router
 from app.utils.problem_details import problem_detail_response
 from app.core.auth import get_service_auth
 from contextlib import asynccontextmanager
+from app.core.config import settings
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Inicializa los servicios necesarios al arrancar la aplicación"""
-    service_auth = get_service_auth()
-    await service_auth.initialize()
-    logging.info("Servicio de autenticación inicializado")
+    environment = settings.ENVIRONMENT
+
+    if environment != "test":
+        service_auth = get_service_auth()
+        await service_auth.initialize()
+        logging.info("Servicio de autenticación inicializado")
+    else:
+        logging.info("Modo test: se omite autenticación del servicio")
     yield
 
 

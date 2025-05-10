@@ -5,7 +5,6 @@ from app.services.user_profile import edit_user
 from app.schemas.user import UserUpdate
 
 
-# 1. ✅ CASO EXITOSO (status 200)
 @pytest.mark.asyncio
 async def test_edit_user_success():
     """Test para el caso exitoso de editar un usuario."""
@@ -30,7 +29,6 @@ async def test_edit_user_success():
         assert await result == mock_response
 
 
-# 2. ❌ TOKEN EXPIRADO → RETRY → ÉXITO
 @pytest.mark.asyncio
 async def test_edit_user_token_expired_then_success():
     """Test para el caso donde el token expira y luego se renueva correctamente."""
