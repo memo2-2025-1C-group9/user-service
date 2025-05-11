@@ -84,8 +84,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
     return problem_detail_response(
         status_code=422,
-        title=exc.errors()[0]["msg"],
-        detail=exc.errors(),
+        title=exc.errors()[0]["type"],
+        detail=exc.errors()[0]["msg"],
         instance=str(request.url),
         headers=headers,
     )
