@@ -1,10 +1,14 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline - user-auth
 
 on:
   push:
+    path: 
+      - 'services/user-auth/**'
     branches:
       - main
   pull_request:
+    path: 
+      - 'services/user-auth/**'
     branches:
       - main
   merge_group:
@@ -52,9 +56,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y docker-compose
-
-      - name: Create Docker network
-        run: docker network create datadog-agent-monitoring
 
       - name: Copy environment variables
         run: |

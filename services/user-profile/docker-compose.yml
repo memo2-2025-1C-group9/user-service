@@ -1,0 +1,27 @@
+services:
+  user-profile-test:
+    build: .
+    command: ["/app/entrypoint.sh", "test"]
+    environment:
+      - ENVIRONMENT=test
+    volumes:
+      - .:/app
+    profiles:
+      - test
+    env_file:
+      - .env.development
+
+  user-profile:
+    build: .
+    command: ["/app/entrypoint.sh", "app"]
+    environment:
+      - DD_SERVICE=app
+      - DD_ENV=${ENVIRONMENT}
+    profiles:
+      - app  
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    env_file:
+      - .env.development

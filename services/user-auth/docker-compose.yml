@@ -37,13 +37,7 @@ services:
       - "8000:8000"
     volumes:
       - /tmp/render-ca.crt:/tmp/render-ca.crt
-    networks:
-      - datadog-agent-monitoring
     profiles:
       - app
     env_file:
       - .env.development
-
-networks:
-  datadog-agent-monitoring:
-    external: true
