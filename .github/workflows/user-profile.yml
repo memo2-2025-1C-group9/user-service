@@ -6,7 +6,6 @@ on:
       - 'services/user-profile/**'
     branches:
       - main
-      - user-profile
   pull_request:
     path: 
       - 'services/user-profile/**'
