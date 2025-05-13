@@ -28,6 +28,7 @@ def block_user(user: User, db: Session):
     db.add(user)
     db.commit()
 
+
 def authenticate_user(db: Session, email: str, password: str):
     try:
         logging.info(f"Intentando autenticar usuario con email: {email}")
