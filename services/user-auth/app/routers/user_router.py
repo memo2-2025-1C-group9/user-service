@@ -209,7 +209,7 @@ async def login_for_access_service_token(
         )
 
 
-@router.get("/token/google")
+@router.post("/token/google")
 async def login_for_access_token_google(
     google_token: Annotated[str, Depends(oauth2_scheme)],
     db: Session = Depends(get_db),
