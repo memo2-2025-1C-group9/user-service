@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import select, delete
 from app.models.user import User
-from app.schemas.user import UserCreate, UserUpdate
+from app.schemas.user import UserCreate, UserUpdate, UserCreateGoogle
 from fastapi import HTTPException, status
 
 
@@ -32,6 +32,26 @@ def create_user(db: Session, user_data: UserCreate):
         location=user_data.location,
         is_teacher=user_data.is_teacher,
         academic_level=user_data.academic_level,
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
+
+def create_user_google(db: Session, user_data: UserCreateGoogle):
+    existing_user = get_user_by_email(db, user_data.email)
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El email ya está registrado",
+        )
+
+    new_user = User(
+        name=user_data.name,
+        email=user_data.email,
+        password=user_data.password,
+        auth_provider=user_data.auth_provider,
     )
     db.add(new_user)
     db.commit()

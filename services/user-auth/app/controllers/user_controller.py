@@ -6,6 +6,7 @@ from app.services.user_service import (
     edit_user,
     remove_user,
 )
+from app.services.google_auth_service import google_login_user
 from app.services.auth_service import login_user, login_service
 from app.schemas.user import UserCreate, UserLogin, UserUpdate, ServiceLogin
 
@@ -36,3 +37,7 @@ def handle_delete_user(db: Session, user_id: int):
 
 def handle_service_login(user: ServiceLogin):
     return login_service(user)
+
+
+def handle_google_login(db: Session, token: str):
+    return google_login_user(db, token)

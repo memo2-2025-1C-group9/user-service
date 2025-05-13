@@ -17,17 +17,21 @@ from app.controllers.user_controller import (
     handle_edit_user,
     handle_delete_user,
     handle_service_login,
+    handle_google_login,
 )
 from app.core.security import get_current_identity
 from app.db.dependencies import get_db
 from typing import Annotated, List
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import ValidationError
 import logging
 import traceback
 
 router = APIRouter()
 
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="token",
+)
 
 @router.post("/register", response_model=dict)
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
@@ -204,6 +208,25 @@ async def login_for_access_service_token(
             detail="Error interno del servidor",
         )
 
+
+@router.get("/token/google")
+async def login_for_access_token_google(
+    google_token: Annotated[str, Depends(oauth2_scheme)],
+    db: Session = Depends(get_db),
+):
+    try:
+        logging.info(f"Intento de login con Google")
+        return handle_google_login(db, google_token)
+
+    except HTTPException as e:
+        raise e
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error interno del servidor: {str(e)}"
+        )
+
+# TODO: LOGICA DE COMBINAR CUENTAS 
 
 @router.get("/me/")
 async def read_users_me(

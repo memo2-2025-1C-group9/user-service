@@ -1,4 +1,5 @@
 from pydantic import BaseModel, EmailStr, field_validator, ConfigDict
+from app.models.user import AuthProvider
 from typing import Literal, Union
 from datetime import datetime
 import re
@@ -30,6 +31,11 @@ class UserCreate(UserBase):
         if not v.isalnum():
             raise ValueError("La contraseña debe ser alfanumérica.")
         return v
+
+
+class UserCreateGoogle(UserBase):
+    auth_provider: Literal[AuthProvider.GOOGLE] = AuthProvider.GOOGLE
+    password: str
 
 
 class UserUpdate(BaseModel):
