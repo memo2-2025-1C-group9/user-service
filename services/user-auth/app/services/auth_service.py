@@ -5,7 +5,7 @@ from app.repositories.user_repository import get_user_by_email
 from app.schemas.user import UserLogin, Token, ServiceLogin
 from app.models.user import User
 from app.core.security import create_access_token
-from app.core.metrics import send_metric
+from app.core.metrics import metric_trace
 from app.core.config import settings
 import logging
 import traceback
@@ -28,16 +28,13 @@ def block_user(user: User, db: Session):
     db.add(user)
     db.commit()
 
-
 def authenticate_user(db: Session, email: str, password: str):
     try:
         logging.info(f"Intentando autenticar usuario con email: {email}")
-        send_metric("auth_service.login_attempt")
         try:
             user = get_user_by_email(db, email)
         except Exception as db_error:
             logging.error(f"Error de base de datos: {str(db_error)}")
-            send_metric("auth_service.auth_error")
             logging.error(traceback.format_exc())
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -47,7 +44,6 @@ def authenticate_user(db: Session, email: str, password: str):
 
         if not user:
             logging.info(f"Usuario con email {email} no encontrado")
-            send_metric("auth_service.auth_error")
             return False
 
         if user.is_blocked:
@@ -75,7 +71,6 @@ def authenticate_user(db: Session, email: str, password: str):
         if not user.password == password:
             try:
                 logging.info(f"Contraseña incorrecta para: {email}")
-                send_metric("auth_service.auth_error")
                 if (
                     (not user.first_login_failure)
                     or user.first_login_failure + LOCK_TIME_LOGIN_WINDOW
@@ -119,7 +114,6 @@ def authenticate_user(db: Session, email: str, password: str):
 
         try:
             logging.info(f"Login exitoso para: {email}")
-            send_metric("auth_service.login_success")
             reset_failed_attempts(user, db)
         except Exception as e:
             db.rollback()
@@ -130,7 +124,6 @@ def authenticate_user(db: Session, email: str, password: str):
         raise e
     except Exception as e:
         logging.error(f"Error no controlado en autenticación: {str(e)}")
-        send_metric("auth_service.auth_error")
         logging.error(traceback.format_exc())
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -139,6 +132,7 @@ def authenticate_user(db: Session, email: str, password: str):
         )
 
 
+@metric_trace("login_user")
 def login_user(db: Session, credentials: UserLogin):
     try:
         user = authenticate_user(db, credentials.email, credentials.password)
@@ -194,6 +188,7 @@ def authenticate_service(user: str, password: str):
         )
 
 
+@metric_trace("login_service")
 def login_service(credentials: ServiceLogin):
     try:
         if authenticate_service(credentials.user, credentials.password):
