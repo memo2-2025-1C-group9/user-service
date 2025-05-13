@@ -25,6 +25,8 @@ app.add_middleware(
     expose_headers=["*"],
 )
 
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+
 # Crear todas las tablas al iniciar la aplicación
 try:
     Base.metadata.create_all(bind=engine)
