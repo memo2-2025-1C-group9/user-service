@@ -76,6 +76,8 @@ jobs:
           echo "SERVICE_PASSWORD=service_password123" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
           echo "SERVICE_ACCESS_TOKEN_EXPIRE_MINUTES=60" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
 
+          echo "WEB_CLIENT_ID=fake-id" >> $GITHUB_WORKSPACE/services/user-auth/.env.development
+
       - name: Start Docker services
         env:
           DB_USER: ${{ secrets.DB_USER }}
@@ -89,6 +91,7 @@ jobs:
           SERVICE_ACCESS_TOKEN_EXPIRE_MINUTES: ${{ secrets.SERVICE_ACCESS_TOKEN_EXPIRE_MINUTES }}
           DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY }}
           DATADOG_URL: ${{ secrets.DATADOG_URL }}
+          WEB_CLIENT_ID: ${{ secrets.WEB_CLIENT_ID }}
         run: |
           cd $GITHUB_WORKSPACE/services/user-auth
           docker-compose --profile app up -d
@@ -140,6 +143,7 @@ jobs:
           LOCK_USER_TIME: 30
           DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY }}
           DATADOG_URL: ${{ secrets.DATADOG_URL }}
+          WEB_CLIENT_ID: ${{ secrets.WEB_CLIENT_ID }}
         run: |
           cd services/user-auth
           PYTHONPATH=. pytest --cov=app --cov=tests --cov-report=term-missing --cov-report=xml --cov-report=html
