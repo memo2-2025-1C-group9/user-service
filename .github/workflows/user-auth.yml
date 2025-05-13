@@ -6,7 +6,6 @@ on:
       - 'services/user-auth/**'
     branches:
       - main
-      - login-google
   pull_request:
     path: 
       - 'services/user-auth/**'
