@@ -33,6 +33,7 @@ oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="token",
 )
 
+
 @router.post("/register", response_model=dict)
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
     try:
@@ -226,7 +227,9 @@ async def login_for_access_token_google(
             status_code=500, detail=f"Error interno del servidor: {str(e)}"
         )
 
-# TODO: LOGICA DE COMBINAR CUENTAS 
+
+# TODO: LOGICA DE COMBINAR CUENTAS
+
 
 @router.get("/me/")
 async def read_users_me(
