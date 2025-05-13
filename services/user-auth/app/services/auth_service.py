@@ -2,9 +2,9 @@ from sqlalchemy.orm import Session
 from datetime import timedelta, datetime
 from fastapi import HTTPException, status
 from app.repositories.user_repository import get_user_by_email
-from app.schemas.user import UserLogin, Token, ServiceLogin
+from app.schemas.user import UserLogin, ServiceLogin
 from app.models.user import User
-from app.core.security import create_access_token
+from app.core.security import create_user_jwt, create_service_jwt
 from app.core.metrics import metric_trace
 from app.core.config import settings
 import logging
@@ -145,18 +145,7 @@ def login_user(db: Session, credentials: UserLogin):
             )
 
         try:
-            access_token_expires = timedelta(
-                minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
-            )
-            access_token = create_access_token(
-                data={
-                    "sub": user.email,
-                    "scopes": ["user"],
-                    "role": "user",
-                },
-                expires_delta=access_token_expires,
-            )
-            return Token(access_token=access_token, token_type="bearer")
+            return create_user_jwt(user.email)
         except Exception as e:
             logging.error(f"Error al generar token: {str(e)}")
             raise HTTPException(
@@ -193,18 +182,7 @@ def authenticate_service(user: str, password: str):
 def login_service(credentials: ServiceLogin):
     try:
         if authenticate_service(credentials.user, credentials.password):
-            access_token_expires = timedelta(
-                minutes=settings.SERVICE_ACCESS_TOKEN_EXPIRE_MINUTES
-            )
-            access_token = create_access_token(
-                data={
-                    "sub": credentials.user,
-                    "scopes": ["service"],
-                    "role": "service",
-                },
-                expires_delta=access_token_expires,
-            )
-            return Token(access_token=access_token, token_type="bearer")
+            return create_service_jwt(credentials.user)
     except HTTPException as e:
         raise e
     except Exception as e:

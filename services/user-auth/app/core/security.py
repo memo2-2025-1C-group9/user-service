@@ -11,7 +11,7 @@ from jwt.exceptions import InvalidTokenError
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from app.db.dependencies import get_db
 from app.repositories.user_repository import get_user_by_email
-
+from app.schemas.user import Token
 
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="token",
@@ -34,6 +34,31 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     )
     return encoded_jwt
 
+def create_service_jwt(service_name: str) -> Token:
+    access_token_expires = timedelta(
+        minutes=settings.SERVICE_ACCESS_TOKEN_EXPIRE_MINUTES
+    )
+    access_token = create_access_token(
+        data={
+            "sub": service_name,
+            "scopes": ["service"],
+            "role": "service",
+        },
+        expires_delta=access_token_expires,
+    )
+    return Token(access_token=access_token, token_type="bearer")
+
+def create_user_jwt(user_email: str) -> Token:
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={
+            "sub": user_email,
+            "scopes": ["user"],
+            "role": "user",
+        },
+        expires_delta=access_token_expires,
+    )
+    return Token(access_token=access_token, token_type="bearer")
 
 def get_user(db, email: str):
     user = get_user_by_email(db, email=email)
