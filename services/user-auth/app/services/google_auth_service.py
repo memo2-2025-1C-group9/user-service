@@ -16,7 +16,6 @@ def google_login_user(db: Session, token: str):
         idinfo = id_token.verify_oauth2_token(
             token, requests.Request(), settings.WEB_CLIENT_ID
         )
-        print(idinfo)
         user_email = idinfo["email"]
 
         logging.info(f"Intentando autenticar usuario google con email: {user_email}")
@@ -48,7 +47,8 @@ def google_login_user(db: Session, token: str):
 
     except HTTPException:
         raise
-    except ValueError:
+    except ValueError as e:
+        logging.error(f"Error en autenticación de google: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Credenciales incorrectas",
