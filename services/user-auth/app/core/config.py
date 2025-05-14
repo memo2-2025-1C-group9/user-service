@@ -41,6 +41,8 @@ class Settings(BaseSettings):
     DATADOG_API_KEY: str
     DATADOG_URL: str
 
+    WEB_CLIENT_ID: str
+
 
 try:
     settings = Settings()

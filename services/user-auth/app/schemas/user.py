@@ -1,4 +1,5 @@
 from pydantic import BaseModel, EmailStr, field_validator, ConfigDict
+from app.models.user import AuthProvider
 from typing import Literal, Union
 from datetime import datetime
 import re
@@ -32,6 +33,11 @@ class UserCreate(UserBase):
         return v
 
 
+class UserCreateGoogle(UserBase):
+    auth_provider: Literal[AuthProvider.GOOGLE] = AuthProvider.GOOGLE
+    password: str
+
+
 class UserUpdate(BaseModel):
     name: str | None = None
     email: EmailStr | None = None
@@ -40,6 +46,7 @@ class UserUpdate(BaseModel):
     is_teacher: bool | None = None
     academic_level: int | None = None
     is_blocked: bool | None = None
+    auth_provider: AuthProvider | None = None
 
     @field_validator("name")
     @classmethod
