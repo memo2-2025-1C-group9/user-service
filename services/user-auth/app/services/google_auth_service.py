@@ -42,8 +42,8 @@ def google_login_user(db: Session, token: str):
             logging.info(
                 f"Email: {user_email} registrado, sin login con google, combinar informacion"
             )
-            # NO tiene login con google
-            return {"sincronize": True}  # TODO: Ver como manejarse con el frontend
+
+            return {"sincronize": True}
 
     except HTTPException:
         raise

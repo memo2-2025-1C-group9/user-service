@@ -228,9 +228,6 @@ async def login_for_access_token_google(
         )
 
 
-# TODO: LOGICA DE COMBINAR CUENTAS
-
-
 @router.get("/me/")
 async def read_users_me(
     identity: Annotated[
