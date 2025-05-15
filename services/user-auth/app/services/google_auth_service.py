@@ -51,7 +51,7 @@ def google_login_user(db: Session, token: str):
         logging.error(f"Error en autenticación de google: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=str(e), #TODO: Cambiar por mensaje de error
+            detail=str(e),  # TODO: Cambiar por mensaje de error
             headers={"WWW-Authenticate": "Bearer"},
         )
     except Exception:

@@ -5,6 +5,7 @@ from datetime import datetime
 import re
 import unicodedata
 
+
 class UserBase(BaseModel):
     name: str
     email: EmailStr
