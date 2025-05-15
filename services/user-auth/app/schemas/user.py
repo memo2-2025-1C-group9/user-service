@@ -3,7 +3,7 @@ from app.models.user import AuthProvider
 from typing import Literal, Union
 from datetime import datetime
 import re
-
+import unicodedata
 
 class UserBase(BaseModel):
     name: str
@@ -15,8 +15,8 @@ class UserBase(BaseModel):
     @field_validator("name")
     @classmethod
     def validate_name(cls, v):
-        if not re.match(r"^[a-zA-Z\s]+$", v):
-            raise ValueError("El nombre no puede contener caracteres especiales.")
+        if not all(c.isalpha() or c.isspace() for c in v):
+            raise ValueError("El nombre solo puede contener letras y espacios.")
         return v
 
 
@@ -51,8 +51,8 @@ class UserUpdate(BaseModel):
     @field_validator("name")
     @classmethod
     def validate_name(cls, v):
-        if v is not None and not re.match(r"^[a-zA-Z\s]+$", v):
-            raise ValueError("El nombre no puede contener caracteres especiales.")
+        if not all(c.isalpha() or c.isspace() for c in v):
+            raise ValueError("El nombre solo puede contener letras y espacios.")
         return v
 
     @field_validator("password")
