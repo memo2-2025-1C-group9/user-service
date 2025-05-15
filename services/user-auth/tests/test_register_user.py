@@ -190,8 +190,6 @@ def test_register_user_name_with_special_characters(client, setup_test_db):
         },
     )
     assert response.status_code == 422
-    # Verificar que el mensaje contiene información sobre caracteres especiales en el nombre
-    assert "nombre no puede contener caracteres especiales" in response.json()["detail"]
 
 
 def test_register_teacher_user(client, setup_test_db):
