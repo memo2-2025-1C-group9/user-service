@@ -77,7 +77,7 @@ def update_user(db: Session, user_id: int, user_data: UserUpdate):
             )
 
     # Actualizar solo los campos proporcionados
-    update_data = user_data.model_dump(exclude_unset=True)
+    update_data = user_data.model_dump(exclude_none=True)
     for field, value in update_data.items():
         setattr(user, field, value)
 

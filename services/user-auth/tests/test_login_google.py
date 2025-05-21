@@ -207,3 +207,50 @@ def test_login_internal_error(mock_get_user, mock_verify_token, client, setup_te
     )
 
     expect_error_response(response, 500)
+
+
+@patch(
+    "app.services.google_auth_service.id_token.verify_oauth2_token",
+    new_callable=MagicMock,
+)
+def test_login_success_user_registered_in_db_with_auth_provider_local_and_link(
+    mock_verify_token, client, setup_test_db
+):
+    # Login google exitoso, Usuario ya registrado en la base de datos y sin auth_provider google
+    mock_verify_token.return_value = (
+        valid_user_data  # Mock de validación de google token
+    )
+
+    # Registro de aplicacion, auth_provider local
+    client.post(
+        "/api/v1/register",
+        json={
+            "name": valid_user_name,  # Valid user data
+            "email": valid_user_email,  # Valid user data
+            "password": "password123",
+        },
+    )
+
+    response = client.post(
+        "/api/v1/token/google",
+        headers={"Authorization": f"Bearer valid_token"},
+    )
+
+    data = response.json()
+    assert "sincronize" in data
+    assert data["sincronize"] is True
+
+    link_response = client.post(
+        "/api/v1/token/google/link",
+        headers={"Authorization": f"Bearer valid_token"},
+        json={
+            "name": valid_user_name,
+            "password": "password123",
+        },
+    )
+
+    data = link_response.json()
+    assert "access_token" in data
+    assert data["token_type"] == "bearer"
+
+    

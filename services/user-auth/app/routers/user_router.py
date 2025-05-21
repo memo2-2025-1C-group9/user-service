@@ -8,6 +8,7 @@ from app.schemas.user import (
     ServiceLogin,
     User,
     UserUpdate,
+    UserGoogleUpdate,
 )
 from app.controllers.user_controller import (
     handle_register_user,
@@ -18,6 +19,7 @@ from app.controllers.user_controller import (
     handle_delete_user,
     handle_service_login,
     handle_google_login,
+    handle_link_google_login,
 )
 from app.core.security import get_current_identity
 from app.db.dependencies import get_db
@@ -218,6 +220,25 @@ async def login_for_access_token_google(
     try:
         logging.info(f"Intento de login con Google")
         return handle_google_login(db, google_token)
+
+    except HTTPException as e:
+        raise e
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error interno del servidor: {str(e)}"
+        )
+
+
+@router.post("/token/google/link")
+async def login_for_access_token_google(
+    user_data: UserGoogleUpdate,
+    google_token: Annotated[str, Depends(oauth2_scheme)],
+    db: Session = Depends(get_db),
+):
+    try:
+        logging.info(f"Intento de combinar cuentas con Google")
+        return handle_link_google_login(db, google_token, user_data)
 
     except HTTPException as e:
         raise e

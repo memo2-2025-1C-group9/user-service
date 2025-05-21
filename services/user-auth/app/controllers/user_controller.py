@@ -5,10 +5,11 @@ from app.services.user_service import (
     get_user,
     edit_user,
     remove_user,
+    link_google_account,
 )
 from app.services.google_auth_service import google_login_user
 from app.services.auth_service import login_user, login_service
-from app.schemas.user import UserCreate, UserLogin, UserUpdate, ServiceLogin
+from app.schemas.user import UserCreate, UserLogin, UserUpdate, ServiceLogin, UserGoogleUpdate
 
 
 def handle_register_user(db: Session, user: UserCreate):
@@ -41,3 +42,7 @@ def handle_service_login(user: ServiceLogin):
 
 def handle_google_login(db: Session, token: str):
     return google_login_user(db, token)
+
+
+def handle_link_google_login(db: Session, token: str, user_data: UserGoogleUpdate):
+    return link_google_account(db, token, user_data)

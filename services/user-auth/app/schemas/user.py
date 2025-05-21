@@ -66,6 +66,9 @@ class UserUpdate(BaseModel):
                 raise ValueError("La contraseña debe ser alfanumérica.")
         return v
 
+class UserGoogleUpdate(UserUpdate):
+    auth_provider: Literal[AuthProvider.LOCAL_GOOGLE] = AuthProvider.LOCAL_GOOGLE
+
 
 class User(UserBase):
     id: int

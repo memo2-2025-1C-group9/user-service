@@ -10,13 +10,25 @@ import logging
 from app.core.config import settings
 
 
-def google_login_user(db: Session, token: str):
+def validate_google_token(token: str):
     try:
         logging.info(f"Validando google token")
         idinfo = id_token.verify_oauth2_token(
             token, requests.Request(), settings.WEB_CLIENT_ID
         )
-        user_email = idinfo["email"]
+        return idinfo["name"], idinfo["email"]
+    except ValueError as e:
+        logging.error(f"Error al validar el token de Google: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+
+def google_login_user(db: Session, token: str):
+    try:
+        user_name, user_email = validate_google_token(token)
 
         logging.info(f"Intentando autenticar usuario google con email: {user_email}")
 
@@ -27,7 +39,7 @@ def google_login_user(db: Session, token: str):
             create_user_google(
                 db,
                 UserCreateGoogle(
-                    name=idinfo["name"],
+                    name=user_name,
                     email=user_email,
                     password=token,
                     auth_provider=AuthProvider.GOOGLE,
@@ -47,13 +59,6 @@ def google_login_user(db: Session, token: str):
 
     except HTTPException:
         raise
-    except ValueError as e:
-        logging.error(f"Error en autenticación de google: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=str(e),  # TODO: Cambiar por mensaje de error
-            headers={"WWW-Authenticate": "Bearer"},
-        )
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
