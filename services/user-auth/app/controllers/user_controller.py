@@ -50,5 +50,5 @@ def handle_google_login(db: Session, token: str):
     return google_login_user(db, token)
 
 
-def handle_link_google_login(db: Session, token: str, user_data: UserGoogleUpdate):
-    return link_google_account(db, token, user_data)
+def handle_link_google_login(db: Session, token: str):
+    return link_google_account(db, token)

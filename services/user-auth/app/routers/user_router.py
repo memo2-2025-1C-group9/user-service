@@ -232,13 +232,12 @@ async def login_for_access_token_google(
 
 @router.post("/token/google/link")
 async def login_for_access_token_google(
-    user_data: UserGoogleUpdate,
     google_token: Annotated[str, Depends(oauth2_scheme)],
     db: Session = Depends(get_db),
 ):
     try:
         logging.info(f"Intento de combinar cuentas con Google")
-        return handle_link_google_login(db, google_token, user_data)
+        return handle_link_google_login(db, google_token)
 
     except HTTPException as e:
         raise e

@@ -243,10 +243,6 @@ def test_login_success_user_registered_in_db_with_auth_provider_local_and_link(
     link_response = client.post(
         "/api/v1/token/google/link",
         headers={"Authorization": f"Bearer valid_token"},
-        json={
-            "name": valid_user_name,
-            "password": "password123",
-        },
     )
 
     data = link_response.json()

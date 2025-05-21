@@ -76,9 +76,10 @@ def remove_user(db: Session, user_id: int):
         )
 
 
-def link_google_account(db: Session, token: str, google_user_data: UserGoogleUpdate):
+def link_google_account(db: Session, token: str):
     try:
-        _, user_email = validate_google_token(token)
+        user_name, user_email = validate_google_token(token)
+        google_user_data = UserGoogleUpdate(name=user_name, email=user_email)
         user = get_user_by_email(db, user_email)
         if not user:
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
