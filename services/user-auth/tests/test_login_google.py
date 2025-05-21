@@ -252,5 +252,3 @@ def test_login_success_user_registered_in_db_with_auth_provider_local_and_link(
     data = link_response.json()
     assert "access_token" in data
     assert data["token_type"] == "bearer"
-
-    
